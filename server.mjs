@@ -1,5 +1,5 @@
 import http from 'node:http';
-import { imageConfigured, stylizeImage, validateStylize, travelImage, validateTravel } from './image-service.mjs';
+import { imageConfigured, stylizeImage, validateStylize, travelImage, validateTravel, travelOptions, travelSettings, travelEngineConfigured, travelTimeoutMs } from './image-service.mjs';
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 
@@ -34,7 +34,7 @@ export function createServer() {
     res.setHeader('Content-Security-Policy', "default-src 'self'; img-src 'self' blob: data:; style-src 'self'; script-src 'self'; connect-src 'self'; base-uri 'none'; frame-ancestors 'none'");
     try {
       const path = new URL(req.url, 'http://localhost').pathname;
-      if (req.method === 'GET' && path === '/api/health') return send(200, { configured: configured(), imageConfigured: imageConfigured() });
+      if (req.method === 'GET' && path === '/api/health') return send(200, { configured: configured(), imageConfigured: imageConfigured(), travel: travelOptions() });
       if (req.method === 'GET' && path === '/api/places') return send(200, places);
       if (req.method === 'GET' && path === '/api/travel-scenes') return send(200, travelScenes);
       if (req.method === 'POST' && ['/api/stylize','/api/travel'].includes(path)) {
@@ -43,7 +43,7 @@ export function createServer() {
         if (imageActive || Date.now()-lastImageRequest < 10000) throw error(429,'正在处理图片，请稍后再试。');
         imageActive = true;
         const controller = new AbortController();
-        const timeout = setTimeout(()=>controller.abort(),150000);
+        let timeout = setTimeout(()=>controller.abort(),30000);
         const onClose = () => {if (!res.writableEnded) controller.abort();};
         res.on('close',onClose);
         try {
@@ -51,7 +51,8 @@ export function createServer() {
           for await (const chunk of req) {bytes+=chunk.length;if(bytes>6*1024*1024)throw error(413,'图片请求过大，请换一张照片。');chunks.push(chunk);}
           let input;try{input=JSON.parse(Buffer.concat(chunks).toString());}catch{throw error(400,'请求格式不正确。');}
           if (path === '/api/travel') validateTravel(input,travelScenes); else validateStylize(input);
-          if (!imageConfigured()) throw error(503,'图像服务尚未配置，仍可使用原片。');
+          if (path === '/api/travel' ? !travelEngineConfigured(travelSettings(input).engine) : !imageConfigured()) throw error(503,'所选图像模型尚未配置，仍可使用原片或手动选择其他模型。');
+          clearTimeout(timeout);timeout=setTimeout(()=>controller.abort(),path==='/api/travel'?travelTimeoutMs(input):150000);
           lastImageRequest = Date.now();
           const result=path === '/api/travel' ? await travelImage(input,travelScenes,controller.signal) : await stylizeImage(input,controller.signal);
           return send(200,result);

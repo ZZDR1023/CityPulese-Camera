@@ -89,20 +89,32 @@ node scripts/browser-check.cjs
 
 没有背景的地点不会自动被换成古城墙；页面显示原因并禁用旅拍生成，仍可切回原片继续。参考图为历史实景，不代表当前现场状态。
 
-`POST /api/travel` 使用与风格化相同的独立图像模型配置，向模型发送两张图：用户人像和服务端绑定的景点参考照片。客户端不能传入任意远程背景地址。模型提示要求保持人物特征和参考建筑，匹配光影与比例；仍可能改变面容、细节和空间关系，用户应审阅结果。预览与导出明确显示“AI 虚拟旅拍”，不代表实际到访。
+`POST /api/travel` 支持 Gemini 3.1、image2、image2.5，向所选模型发送用户人像与服务端绑定的景点参考照片；“风景为主”还附一张服务端生成的构图示意图。客户端不能传入任意远程背景地址。模型提示要求保持人物特征和参考建筑，匹配光影与比例；仍可能改变面容、细节和空间关系，用户应审阅结果。预览与导出明确显示“AI 虚拟旅拍”，不代表实际到访。
 
 景点选择与文化卡同步。换地点会使旧旅拍失效并恢复原片，不能将旧地点合成图导出为新地点。换原片也清空旧旅拍。旅拍后的 AI 文案提示使用想象／期待语气，离线旅拍示例同样避免宣称真实到访。
 
 参考图元数据位于 `data/travel-scenes.json`，照片位于 `public/scenes/`，完整署名与选图理由见 `public/scenes/ATTRIBUTION.md`。本轮替换了古城墙与博物馆旧图，并增加 3 个背景。预览、导出保留作品名、摄影者、拍摄日期、许可链接、来源及 AI 合成修改说明。**古城墙采用 CC BY-SA 4.0，万寿宝塔采用 CC BY-SA 3.0；公开分享改编图须使用相应相同许可。** 博物馆、张居正故居、关帝庙采用 CC BY 3.0。这些许可针对图片及改编，不等于项目代码的开源许可。
 
-每条 scene 的 `placementHint` 给用户展示站位建议，`compositionPrompt` 由服务端插入两图提示，不接受客户端背景 URL 或构图指令。提示强调已有地面／台阶、接触阴影、地标不遮挡与方形适配；模型仍不能保证像素级建筑和人脸保真。
+每条 scene 的 `placementHint` 给用户展示站位建议，`compositionPrompt`、`harmonyPrompt`、`subjectPlacement`由服务端控制，不接受客户端背景URL或任意构图指令。融合提示强调以环境光重新匹配人物的曝光、白平衡、锐度、透视和接触阴影；模型仍不能保证像素级建筑、人脸保真或精确人物占比。
+
+### 旅拍模型与融合优化
+
+页面可选 **Gemini 3.1／image2／image2.5** 和 **自然合影／风景为主**。自然合影目标为适中人物，“风景为主”提供小人物布局示意，但实测模型仍可能把人放大，不能作为精确缩放工具。保留默认Gemini，不自动换成较慢模型。
+
+image2和image2.5通过multipart `/images/edits` 上传真实参考图，不是纯文字生图。配置 `TRAVEL_IMAGE2_BASE_URL/API_KEY`、`TRAVEL_IMAGE25_BASE_URL/API_KEY`，base缺省使用 `IMAGE_BASE_URL`；密钥须分别配置，不隐式跨模型回退。`TRAVEL_DEFAULT_ENGINE`默认 `gemini`。本机已接通三种。Gemini最长等待150秒，image2／image2.5最长240秒。
+
+一次点击仅调用所选模型一次，不自动重试或切换模型。待生成设置与当前图片的实际模型／构图区分显示；已有结果按地点、模型和构图缓存，最多6个，切回缓存不再次调用。新照片清缓存和同意，失败保留原片与已有结果。PNG保留实际模型／构图、AI标识和许可。
+
+同一虚构写实人像、关帝庙实测：Gemini40.275秒、image2 61.273秒、image2.5 95.379秒。本次image2.5人景占比较合适，但仅为一次样本，不能当稳定排名。风景为主的几次实测仍未准确达到小人物目标，已如实提示。完整记录见 [`docs/旅拍融合优化与模型对比.md`](docs/旅拍融合优化与模型对比.md)。
 
 验收命令：
 
 - `npm test` 包括地点白名单、上传同意、两张参考图请求和来源关联测试。
 - `CHROME_PATH=/opt/google/chrome/chrome node scripts/travel-browser-check.cjs` 使用模拟返回遍历 14 个文化点位、5 个旅拍场景及桌面／手机视口，验证同意、完整参考图、站位与日期、来源署名、实际 PNG 下载、无背景不自动换地点、失败恢复、文案模式与换照片失效，不消耗模型额度。
 - `node scripts/travel-real-check.mjs jingzhou-wall` 使用合成人物测试图完成一次真实模型合成，消耗额度。
-- `CHROME_PATH=/opt/google/chrome/chrome node scripts/travel-browser-real.cjs [placeId]` 在手机尺寸页面对指定背景完成一次真实合成并下载相纸，默认博物馆，消耗额度。纪念文字用明确标注的离线示例，以隔离图像功能验收。
+- `CHROME_PATH=/opt/google/chrome/chrome node scripts/travel-browser-real.cjs [placeId] [gemini|image2|image25] [balanced|scenic]` 在手机尺寸页面对指定背景完成一次真实合成并下载相纸，默认博物馆，消耗额度。纪念文字用明确标注的离线示例，以隔离图像功能验收。
+- `CHROME_PATH=/opt/google/chrome/chrome npm run test:travel:harmony` 不收费，验证三模型、构图、缓存、失败／取消、实际设置与导出。
+- `npm run test:travel:harmony:ai` 会对三模型各发一次真实请求，须先有本机忽略的 `artifacts/harmony/synthetic-realistic-person.jpg`，消耗额度；不作为常规自动回归。
 - `node scripts/expanded-story-real-check.mjs` 发送 3 条真实文案请求，覆盖新地点、虚拟旅拍语气和诱导宣称熊猫乐园开放／免费的输入，消耗文字模型额度。
 
 2026-10-01 本轮真实验收：古城墙新背景约 20.192 秒、张居正故居约 20.385 秒、关帝庙约 18.298 秒；万寿宝塔手机浏览器从合成到 PNG 下载及恢复原片约 29.401 秒，博物馆约 19.783 秒。万寿宝塔首次接口请求 150 秒超时，随后浏览器重试成功，未隐藏该失败。已目视检查 5 个新背景的真实合成与 2 张完整相纸，署名、许可和 AI 标识完整。测试人物为合成插画，**不代表真人相似度、多人物或新版本真机验收**。详细结果与边界见 `docs/景点扩展验收.md`。

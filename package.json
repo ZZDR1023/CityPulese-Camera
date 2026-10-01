@@ -16,7 +16,9 @@
     "test:travel:ai": "node scripts/travel-real-check.mjs",
     "test:travel:browser:ai": "node scripts/travel-browser-real.cjs",
     "test:expanded:ai": "node scripts/expanded-story-real-check.mjs",
-    "test:camera": "node scripts/camera-check.cjs"
+    "test:camera": "node scripts/camera-check.cjs",
+    "test:travel:harmony": "node scripts/travel-harmony-browser-check.cjs",
+    "test:travel:harmony:ai": "node scripts/travel-harmony-real-check.mjs"
   },
   "engines": {
     "node": ">=22.9"

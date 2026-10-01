@@ -30,10 +30,12 @@ test('approved scenes link to places, JPEGs, attribution and scene-specific stan
   for (const s of scenes) {
     assert.ok(places.some(p=>p.id===s.placeId));
     assert.match(s.image,/^\/scenes\/[a-z0-9-]+\.jpg$/);
-    for (const field of ['credit','license','licenseUrl','sourceUrl','modifications','capturedAt','placementHint','compositionPrompt']) assert.ok(typeof s[field]==='string' && s[field].length>0,field);
+    for (const field of ['credit','license','licenseUrl','sourceUrl','modifications','capturedAt','placementHint','compositionPrompt','harmonyPrompt']) assert.ok(typeof s[field]==='string' && s[field].length>0,field);
     assert.match(s.license,/^CC BY(?:-SA)? [34]\.0$/);
     assert.ok(new URL(s.licenseUrl).hostname==='creativecommons.org');
     assert.ok(new URL(s.sourceUrl).hostname==='commons.wikimedia.org');
+    assert.ok(s.subjectPlacement.centerX>0 && s.subjectPlacement.centerX<1);
+    assert.ok(s.subjectPlacement.scenicGroundY<s.subjectPlacement.balancedGroundY);
     const bytes=await readFile(new URL('../public'+s.image,import.meta.url));
     validateImage('data:image/jpeg;base64,'+bytes.toString('base64'));
     assert.ok(bytes.length<1024*1024,'reference is bounded');
