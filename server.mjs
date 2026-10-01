@@ -105,10 +105,10 @@ export function createServer() {
           return send(200, parseStory(data.choices[0].message.content));
         } finally { active--; }
       }
-      if (req.method === 'GET' && publicFiles.has(path)) {
+      if (['GET', 'HEAD'].includes(req.method) && publicFiles.has(path)) {
         const file = publicFiles.get(path);
         const body = await readFile(new URL('./public/' + file, import.meta.url));
-        res.writeHead(200, { 'Content-Type': mime[file.split('.').pop()] }); return res.end(body);
+        res.writeHead(200, { 'Content-Type': mime[file.split('.').pop()] }); return res.end(req.method === 'HEAD' ? null : body);
       }
       send(404, { error: '页面不存在。' });
     } catch (e) { send(e.status || (e.name === 'TimeoutError' ? 504 : 500), { error: e.status ? e.message : e.name === 'TimeoutError' ? '生成超时，照片已保留，请重试。' : '服务暂时异常，请重试。' }); }
