@@ -5,9 +5,24 @@ import { fileURLToPath } from 'node:url';
 
 const places = JSON.parse(await readFile(new URL('./data/places.json', import.meta.url)));
 const travelScenes = JSON.parse(await readFile(new URL('./data/travel-scenes.json', import.meta.url)));
-const publicFiles = new Map([['/', 'index.html'], ['/app.js', 'app.js'], ['/style.css', 'style.css']]);
+const publicFiles = new Map([
+  ['/', 'index.html'],
+  ['/app.js', 'app.js'],
+  ['/style.css', 'style.css'],
+  ['/qrcode.png', 'qrcode.png'],
+  ['/qrcode.svg', 'qrcode.svg'],
+  ['/qrcode-card.png', 'qrcode-card.png'],
+  ['/qrcode-card.svg', 'qrcode-card.svg']
+]);
 for (const scene of travelScenes) publicFiles.set(scene.image,scene.image.slice(1));
-const mime = { jpg: 'image/jpeg', html: 'text/html; charset=utf-8', js: 'text/javascript; charset=utf-8', css: 'text/css; charset=utf-8' };
+const mime = {
+  jpg: 'image/jpeg',
+  png: 'image/png',
+  svg: 'image/svg+xml',
+  html: 'text/html; charset=utf-8',
+  js: 'text/javascript; charset=utf-8',
+  css: 'text/css; charset=utf-8'
+};
 const configured = () => Boolean(process.env.AI_BASE_URL && process.env.AI_API_KEY && process.env.AI_MODEL);
 const error = (status, message) => Object.assign(new Error(message), { status });
 export function validateInput(input) {

@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 440 580" width="440" height="580">
+  <defs>
+    <filter id="card-shadow" x="-8%" y="-6%" width="116%" height="116%">
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#1d262b" flood-opacity="0.12" />
+    </filter>
+  </defs>
+
+  <!-- 阴影与相纸白卡底色 -->
+  <rect x="20" y="20" width="400" height="540" rx="16" fill="#fcfaf6" stroke="#e8e2d5" stroke-width="1.5" filter="url(#card-shadow)" />
+
+  <!-- 顶部日系和纸胶带装饰 -->
+  <rect x="170" y="10" width="100" height="22" rx="3" fill="#2d525d" opacity="0.82" />
+
+  <!-- 顶部品牌区域 -->
+  <g transform="translate(45, 54)">
+    <!-- 品牌圆形图标 -->
+    <rect x="0" y="0" width="32" height="32" rx="8" fill="#264e58" />
+    <text x="16" y="22" font-family="-apple-system, BlinkMacSystemFont, "PingFang SC", "Noto Sans SC", sans-serif" font-size="16" font-weight="bold" fill="#ffffff" text-anchor="middle">城</text>
+    
+    <!-- 标题与英文 -->
+    <text x="42" y="18" font-family="-apple-system, BlinkMacSystemFont, "PingFang SC", "Noto Sans SC", sans-serif" font-size="16" font-weight="700" fill="#1f2d33" letter-spacing="1">城脉相机</text>
+    <text x="42" y="30" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="9" font-weight="600" fill="#7a8b94" letter-spacing="1.5">CITY MEMORIES · 荆州限定</text>
+    
+    <!-- 标牌 -->
+    <rect x="270" y="4" width="75" height="22" rx="11" fill="#f0eae1" />
+    <text x="307" y="19" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="10" font-weight="700" fill="#9e5638" text-anchor="middle">VOL.001</text>
+  </g>
+
+  <!-- 二维码白色衬底与内边框 -->
+  <rect x="70" y="112" width="300" height="300" rx="12" fill="#ffffff" stroke="#ede7dc" stroke-width="1" />
+  
+  <!-- 矢量二维码 (37x37 网格放大 7.297 倍，居中留白) -->
+  <g transform="translate(85, 127) scale(7.297)" shape-rendering="crispEdges">
+    <path stroke="#1a252c" stroke-width="1" d="M2 2.5h7m4 0h1m2 0h2m3 0h2m1 0h1m1 0h1m1 0h7M2 3.5h1m5 0h1m2 0h1m2 0h1m2 0h3m1 0h4m1 0h1m1 0h1m5 0h1M2 4.5h1m1 0h3m1 0h1m1 0h2m2 0h2m1 0h1m1 0h3m1 0h4m1 0h1m1 0h3m1 0h1M2 5.5h1m1 0h3m1 0h1m1 0h2m2 0h3m1 0h1m2 0h3m1 0h2m1 0h1m1 0h3m1 0h1M2 6.5h1m1 0h3m1 0h1m2 0h1m1 0h1m1 0h2m1 0h2m2 0h2m1 0h1m2 0h1m1 0h3m1 0h1M2 7.5h1m5 0h1m3 0h1m2 0h2m1 0h3m2 0h2m1 0h1m1 0h1m5 0h1M2 8.5h7m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h7M12 9.5h1m11 0h2M5 10.5h2m1 0h2m3 0h2m1 0h1m4 0h2m2 0h2m4 0h2M2 11.5h1m1 0h1m1 0h2m2 0h2m1 0h2m1 0h1m1 0h2m1 0h1m2 0h2m1 0h1m1 0h2M2 12.5h1m2 0h1m2 0h1m3 0h1m6 0h2m2 0h1m1 0h5m1 0h1m1 0h2M2 13.5h1m1 0h1m1 0h2m1 0h4m1 0h1m3 0h5m4 0h1m1 0h2m1 0h3M2 14.5h3m3 0h1m1 0h2m2 0h4m2 0h1m1 0h3m1 0h1m1 0h1m1 0h2m1 0h2M3 15.5h1m1 0h1m1 0h1m2 0h4m1 0h2m1 0h2m1 0h1m1 0h4m5 0h2M2 16.5h3m1 0h1m1 0h3m2 0h3m1 0h2m1 0h2m5 0h1m2 0h3M3 17.5h5m1 0h3m4 0h5m1 0h1m3 0h2m2 0h1m1 0h3M2 18.5h2m4 0h2m5 0h2m1 0h3m1 0h1m2 0h1m1 0h4m1 0h1M2 19.5h1m1 0h1m2 0h1m1 0h1m1 0h1m2 0h5m2 0h4m1 0h1m1 0h4M7 20.5h2m1 0h1m1 0h3m1 0h2m3 0h2m1 0h2m4 0h3M6 21.5h1m4 0h1m2 0h1m2 0h2m3 0h1m2 0h3m2 0h4M6 22.5h1m1 0h1m1 0h3m2 0h1m1 0h2m1 0h2m6 0h2m1 0h1m2 0h1M2 23.5h1m1 0h2m1 0h1m1 0h1m2 0h3m1 0h5m2 0h2m1 0h1m1 0h3m1 0h1M2 24.5h1m1 0h3m1 0h1m3 0h5m1 0h2m4 0h2m2 0h1m3 0h3M2 25.5h1m1 0h1m1 0h1m2 0h1m1 0h1m1 0h1m2 0h3m1 0h3m1 0h3m2 0h1m2 0h2M2 26.5h4m2 0h2m3 0h1m1 0h1m1 0h1m2 0h12m1 0h2M10 27.5h1m1 0h1m2 0h1m4 0h4m2 0h1m3 0h1m1 0h2M2 28.5h7m1 0h1m1 0h3m1 0h1m1 0h1m1 0h3m2 0h2m1 0h1m1 0h3M2 29.5h1m5 0h1m6 0h4m3 0h3m1 0h1m3 0h4M2 30.5h1m1 0h3m1 0h1m1 0h3m1 0h2m2 0h2m3 0h9m1 0h1M2 31.5h1m1 0h3m1 0h1m1 0h3m1 0h1m6 0h5m1 0h1m1 0h1m3 0h1M2 32.5h1m1 0h3m1 0h1m2 0h5m1 0h2m2 0h3m1 0h2m3 0h2m1 0h2M2 33.5h1m5 0h1m2 0h1m1 0h2m12 0h2m2 0h1m1 0h2M2 34.5h7m4 0h3m2 0h11m1 0h1m1 0h1" />
+  </g>
+
+  <!-- 底部文案与指引 -->
+  <g transform="translate(220, 442)" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, "PingFang SC", "Noto Sans SC", sans-serif">
+    <text y="0" font-size="15" font-weight="700" fill="#1f2d33" letter-spacing="1.2">手机扫码 制作专属相纸</text>
+    <text y="24" font-size="11" font-weight="500" fill="#697b85" letter-spacing="0.5">拍照打卡 · AI 纪念文案 · 虚拟旅拍</text>
+    <text y="48" font-size="11" font-weight="600" fill="#9e5638" letter-spacing="1">camera.jajaicb.cn</text>
+  </g>
+
+  <!-- 极简角标修饰线 -->
+  <line x1="45" y1="520" x2="395" y2="520" stroke="#f0eae1" stroke-width="1" />
+</svg>
