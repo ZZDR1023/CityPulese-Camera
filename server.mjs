@@ -15,7 +15,8 @@ const publicFiles = new Map([
   ['/qrcode-card.svg', 'qrcode-card.svg'],
   ['/posters/poster1.png', 'posters/poster1.png'],
   ['/posters/poster2.png', 'posters/poster2.png'],
-  ['/posters/poster3.png', 'posters/poster3.png']
+  ['/posters/poster3.png', 'posters/poster3.png'],
+  ['/posters/poster_official.png', 'posters/poster_official.png']
 ]);
 for (const scene of travelScenes) publicFiles.set(scene.image,scene.image.slice(1));
 const mime = {
