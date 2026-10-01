@@ -18,7 +18,12 @@ const publicFiles = new Map([
   ['/posters/poster3.png', 'posters/poster3.png'],
   ['/posters/poster_official.png', 'posters/poster_official.png']
 ]);
-for (const scene of travelScenes) publicFiles.set(scene.image,scene.image.slice(1));
+for (const scene of travelScenes) {
+  publicFiles.set(scene.image, scene.image.slice(1));
+  if (scene.images) {
+    for (const item of scene.images) publicFiles.set(item.url, item.url.slice(1));
+  }
+}
 const mime = {
   jpg: 'image/jpeg',
   png: 'image/png',

@@ -16,7 +16,34 @@
       "centerX": 0.68,
       "balancedGroundY": 0.92,
       "scenicGroundY": 0.84
-    }
+    },
+    "images": [
+      {
+        "url": "/scenes/jingzhou-wall-1.jpg",
+        "title": "城门框景 · 宾阳楼",
+        "hint": "拱门框景：人物站在石板路右侧，避开城门中轴"
+      },
+      {
+        "url": "/scenes/jingzhou-wall-2.jpg",
+        "title": "古城老街 · 红灯笼",
+        "hint": "古城老街：人物站在老街石板路一侧，红灯笼映衬"
+      },
+      {
+        "url": "/scenes/jingzhou-wall-3.jpg",
+        "title": "古色红亭 · 庭院",
+        "hint": "古色红亭：人物站在石坪前方，背景为红墙六角亭"
+      },
+      {
+        "url": "/scenes/jingzhou-wall-4.jpg",
+        "title": "城墙石道 · 护城河",
+        "hint": "城墙石道：人物漫步在护城河畔石道，古城墙纵深"
+      },
+      {
+        "url": "/scenes/jingzhou-wall-5.jpg",
+        "title": "瓮城透视 · 绿林步道",
+        "hint": "瓮城拱门：人物站在曲折步道前方，绿树与瓮城城楼相映"
+      }
+    ]
   },
   {
     "placeId": "jingzhou-museum",
@@ -35,7 +62,24 @@
       "centerX": 0.28,
       "balancedGroundY": 0.92,
       "scenicGroundY": 0.84
-    }
+    },
+    "images": [
+      {
+        "url": "/scenes/jingzhou-museum-1.jpg",
+        "title": "正门主殿 · 金字匾额",
+        "hint": "正门花阶：人物站在台阶下方侧边，完整展现金匾与殿宇"
+      },
+      {
+        "url": "/scenes/jingzhou-museum-2.jpg",
+        "title": "红墙回廊 · 苍翠园林",
+        "hint": "红墙回廊：人物站在石阶旁，古建飞檐与红墙相映"
+      },
+      {
+        "url": "/scenes/jingzhou-museum-3.jpg",
+        "title": "展馆正面 · 绿树掩映",
+        "hint": "展馆正面：人物站在广场前景，绿树掩映中的典雅建筑"
+      }
+    ]
   },
   {
     "placeId": "zhang-juzheng",
@@ -54,7 +98,24 @@
       "centerX": 0.28,
       "balancedGroundY": 0.92,
       "scenicGroundY": 0.84
-    }
+    },
+    "images": [
+      {
+        "url": "/scenes/zhang-juzheng-1.jpg",
+        "title": "正堂庭院 · 居正铜像",
+        "hint": "铜像庭院：人物站在石板前侧，与张居正立像并肩合影"
+      },
+      {
+        "url": "/scenes/zhang-juzheng-2.jpg",
+        "title": "故居天门 · 古阶石级",
+        "hint": "天门古阶：人物站在石阶前坪，古色天门耸立上方"
+      },
+      {
+        "url": "/scenes/zhang-juzheng-3.jpg",
+        "title": "白墙水墨 · 居正画影",
+        "hint": "白墙画壁：人物立于庭前石道，水墨壁画与古松衬托"
+      }
+    ]
   },
   {
     "placeId": "guandi-temple",
@@ -73,7 +134,19 @@
       "centerX": 0.28,
       "balancedGroundY": 0.92,
       "scenicGroundY": 0.84
-    }
+    },
+    "images": [
+      {
+        "url": "/scenes/guandi-temple-1.jpg",
+        "title": "威震华夏 · 正殿古鼎",
+        "hint": "威震华夏：人物站在左侧步道，大殿香炉古木掩映"
+      },
+      {
+        "url": "/scenes/guandi-temple-2.jpg",
+        "title": "关帝山门 · 石狮迎宾",
+        "hint": "关帝庙门：人物站在山门前坪石狮旁，古意盎然"
+      }
+    ]
   },
   {
     "placeId": "wanshou-pagoda",
@@ -86,13 +159,30 @@
     "capturedAt": "2026-10-01",
     "modifications": "精美实景重构与旅拍融合。公开分享改编图须署名并使用 CC BY-SA 3.0。",
     "placementHint": "人物站在林荫甬道靠前位置，完整保留七层八角古塔全貌与苍翠林木。",
-    "compositionPrompt": "Place the subject on the lower foreground paved path, slightly left of its center. Keep the entire visible seven-storey octagonal pagoda and finial in the background, and do not cover its central silhouette with the subject's head. Keep the surrounding trees and railings. Fit the reference height into the square composition rather than cropping the finial. Never put the person on grass, behind the safety railing or inside the sunken tower enclosure. Match diffuse bright daylight.",
+    "compositionPrompt": "Place the subject on the lower foreground paved path, slightly left of its center. Keep the entire visible seven-storey octagonal pagoda and finial in the background, and do not cover its central silhouette with the subject head. Keep the surrounding trees and railings. Fit the reference height into the square composition rather than cropping the finial. Never put the person on grass, behind the safety railing or inside the sunken tower enclosure. Match diffuse bright daylight.",
     "harmonyPrompt": "Diffuse bright daytime under trees. Place the subject at a moderate distance on the path with a small connected shoe contact shadow and soft ambient tree shade. Keep the tower finial complete and avoid a huge close-up person masking lower tower levels.",
     "subjectPlacement": {
       "centerX": 0.3,
       "balancedGroundY": 0.92,
       "scenicGroundY": 0.84
-    }
+    },
+    "images": [
+      {
+        "url": "/scenes/wanshou-pagoda-1.jpg",
+        "title": "古塔林荫 · 青石甬道",
+        "hint": "万寿古塔：人物站在青石甬道靠前，八面七层塔巍峨耸立"
+      },
+      {
+        "url": "/scenes/wanshou-pagoda-2.jpg",
+        "title": "观音古矶 · 长江大桥",
+        "hint": "江畔远眺：人物站在江边石台，江水与斜拉大桥为衬"
+      },
+      {
+        "url": "/scenes/wanshou-pagoda-3.jpg",
+        "title": "宝塔近瞻 · 仿木砖雕",
+        "hint": "古塔近景：人物位于塔座前方，细赏明代精美砖石结构"
+      }
+    ]
   },
   {
     "placeId": "chu-chariots",
@@ -105,13 +195,30 @@
     "capturedAt": "2026-10-01",
     "modifications": "精美实景重构与旅拍融合。",
     "placementHint": "人物站在前景暗色地面侧方，背景为宏伟磅礴的青铜楚王车马阵浮雕主墙。",
-    "compositionPrompt": "Place the subject in the lower foreground on the glossy museum hall floor, slightly to one side. The dramatic, monumental bronze relief mural depicting King Chu's horse-drawn chariot army and golden characters 楚王车马阵 forms the rich cultural backdrop.",
+    "compositionPrompt": "Place the subject in the lower foreground on the glossy museum hall floor, slightly to one side. The dramatic, monumental bronze relief mural depicting King Chu horse-drawn chariot army and golden characters 楚王车马阵 forms the rich cultural backdrop.",
     "harmonyPrompt": "Indoor exhibition spotlighting with warm directional glows matching the golden embossed relief and polished dark stone flooring.",
     "subjectPlacement": {
       "centerX": 0.25,
       "balancedGroundY": 0.92,
       "scenicGroundY": 0.84
-    }
+    },
+    "images": [
+      {
+        "url": "/scenes/chu-chariots-1.jpg",
+        "title": "青铜浮雕 · 车马阵壁",
+        "hint": "浮雕主墙：人物站在展厅暗色地面侧边，车马阵磅礴生动"
+      },
+      {
+        "url": "/scenes/chu-chariots-2.jpg",
+        "title": "展厅正门 · 遗址广场",
+        "hint": "正门广场：人物站在开阔石铺地坪，楚韵建筑宏大整洁"
+      },
+      {
+        "url": "/scenes/chu-chariots-3.jpg",
+        "title": "楚国军阵 · 战车奔腾",
+        "hint": "军阵群雕：人物站在展区前端，楚军战车气贯长虹"
+      }
+    ]
   },
   {
     "placeId": "zhanghua-temple",
@@ -130,7 +237,19 @@
       "centerX": 0.72,
       "balancedGroundY": 0.92,
       "scenicGroundY": 0.84
-    }
+    },
+    "images": [
+      {
+        "url": "/scenes/zhanghua-temple-1.jpg",
+        "title": "重檐大殿 · 盘龙石柱",
+        "hint": "宏伟大殿：人物站在石板广场侧方，三重檐大殿耸立"
+      },
+      {
+        "url": "/scenes/zhanghua-temple-2.jpg",
+        "title": "禅意长廊 · 彩绘藻井",
+        "hint": "红柱回廊：人物漫步在深邃回廊中，禅意悠远"
+      }
+    ]
   },
   {
     "placeId": "guanyu-shrine",
@@ -149,7 +268,19 @@
       "centerX": 0.25,
       "balancedGroundY": 0.92,
       "scenicGroundY": 0.84
-    }
+    },
+    "images": [
+      {
+        "url": "/scenes/guanyu-shrine-1.jpg",
+        "title": "关公金身 · 巍峨立像",
+        "hint": "金身立像：人物站在广场左前方，仰望关公手抚长髯持大刀"
+      },
+      {
+        "url": "/scenes/guanyu-shrine-2.jpg",
+        "title": "赤兔奔腾 · 关公跃马",
+        "hint": "跃马横刀：人物站在雕像石座旁，关公跨赤兔马威震天下"
+      }
+    ]
   },
   {
     "placeId": "linjiangxian-park",
@@ -168,6 +299,18 @@
       "centerX": 0.72,
       "balancedGroundY": 0.92,
       "scenicGroundY": 0.84
-    }
+    },
+    "images": [
+      {
+        "url": "/scenes/linjiangxian-park-1.jpg",
+        "title": "湖畔漫步 · 拱桥垂柳",
+        "hint": "湖畔石道：人物伫立水滨步道，垂柳绿影与远方石拱桥"
+      },
+      {
+        "url": "/scenes/linjiangxian-park-2.jpg",
+        "title": "长江林荫 · 幽深绿道",
+        "hint": "林荫大道：人物漫步在密林绿道之中，满目苍翠"
+      }
+    ]
   }
 ]

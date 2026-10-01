@@ -4,9 +4,9 @@ const fail = (status, message) => Object.assign(new Error(message), {status});
 export const imageConfigured = () => Boolean(process.env.IMAGE_BASE_URL && process.env.IMAGE_API_KEY && process.env.IMAGE_MODEL);
 export const imageStyles = {anime:'anime',watercolor:'watercolor'};
 const engines = {
-  gemini: {label:'Gemini 3.1 · 快速',timeoutSeconds:150,protocol:'chat'},
-  image2: {label:'image2 · 细节',timeoutSeconds:240,protocol:'edits',model:'gpt-image-2',prefix:'TRAVEL_IMAGE2'},
-  image25: {label:'image2.5 · 精细融合',timeoutSeconds:240,protocol:'edits',model:'gpt-image-2.5-sunburst',prefix:'TRAVEL_IMAGE25'}
+  gemini: {label:'快速',timeoutSeconds:150,protocol:'chat'},
+  image2: {label:'标准',timeoutSeconds:240,protocol:'edits',model:'gpt-image-2',prefix:'TRAVEL_IMAGE2'},
+  image25: {label:'精细',timeoutSeconds:240,protocol:'edits',model:'gpt-image-2.5-sunburst',prefix:'TRAVEL_IMAGE25'}
 };
 export const travelFramings = {balanced:'自然合影',scenic:'风景为主'};
 function engineConfig(id) {
@@ -120,10 +120,15 @@ export async function travelImage(input, scenes, signal) {
   const scene=validateTravel(input,scenes);
   const settings=travelSettings(input);
   if (!travelEngineConfigured(settings.engine)) throw fail(503,'此旅拍模型尚未配置，请手动选择已可用模型，原片已保留。');
-  const bytes=await readFile(new URL('./public'+scene.image,import.meta.url));
+  let chosenImage = scene.image;
+  if (input.sceneImage && typeof input.sceneImage === 'string') {
+    const valid = input.sceneImage === scene.image || (scene.images && scene.images.some(img=>img.url===input.sceneImage));
+    if (valid) chosenImage = input.sceneImage;
+  }
+  const bytes=await readFile(new URL('./public'+chosenImage,import.meta.url));
   const reference='data:image/jpeg;base64,'+bytes.toString('base64');
   const withLayout=settings.framing==='scenic';
   const prompt=buildTravelPrompt(scene,settings.framing,withLayout);
   const references=[input.image,reference];if(withLayout)references.push(buildTravelLayout(scene,settings.framing));
-  return {image:await editImages(prompt,references,signal,engineConfig(settings.engine)),mode:'ai-travel',placeId:scene.placeId,scene,layoutGuided:withLayout,...settings};
+  return {image:await editImages(prompt,references,signal,engineConfig(settings.engine)),mode:'ai-travel',placeId:scene.placeId,scene,sceneImage:chosenImage,layoutGuided:withLayout,...settings};
 }
