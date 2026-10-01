@@ -16,7 +16,10 @@ const publicFiles = new Map([
   ['/posters/poster1.png', 'posters/poster1.png'],
   ['/posters/poster2.png', 'posters/poster2.png'],
   ['/posters/poster3.png', 'posters/poster3.png'],
-  ['/posters/poster_official.png', 'posters/poster_official.png']
+  ['/posters/poster_official.png', 'posters/poster_official.png'],
+  ['/audio/jingzhouyao.mp3', 'audio/jingzhouyao.mp3'],
+  ['/audio/record-cover.webp', 'audio/record-cover.webp'],
+  ['/audio/record-cover.jpg', 'audio/record-cover.jpg']
 ]);
 for (const scene of travelScenes) {
   publicFiles.set(scene.image, scene.image.slice(1));
@@ -30,7 +33,9 @@ const mime = {
   svg: 'image/svg+xml',
   html: 'text/html; charset=utf-8',
   js: 'text/javascript; charset=utf-8',
-  css: 'text/css; charset=utf-8'
+  css: 'text/css; charset=utf-8',
+  mp3: 'audio/mpeg',
+  webp: 'image/webp'
 };
 const configured = () => Boolean(process.env.AI_BASE_URL && process.env.AI_API_KEY && process.env.AI_MODEL);
 const error = (status, message) => Object.assign(new Error(message), { status });

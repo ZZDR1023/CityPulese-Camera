@@ -237,12 +237,28 @@ function openAppWithFallback(appScheme, webUrl) {
     window.open(webUrl, '_blank', 'noopener,noreferrer');
     return;
   }
-  const start = Date.now();
+  let appLaunched = false;
+  let timer = null;
+  const cancelFallback = () => {
+    appLaunched = true;
+    if (timer) { clearTimeout(timer); timer = null; }
+    window.removeEventListener('pagehide', cancelFallback);
+    window.removeEventListener('blur', cancelFallback);
+    document.removeEventListener('visibilitychange', onVisChange);
+  };
+  const onVisChange = () => {
+    if (document.hidden || document.visibilityState === 'hidden') cancelFallback();
+  };
+  window.addEventListener('pagehide', cancelFallback, { once: true });
+  window.addEventListener('blur', cancelFallback, { once: true });
+  document.addEventListener('visibilitychange', onVisChange);
   window.location.href = appScheme;
-  setTimeout(() => {
-    if (document.hidden || Date.now() - start > 2200) return;
-    window.location.href = webUrl;
-  }, 1200);
+  timer = setTimeout(() => {
+    cancelFallback();
+    if (!appLaunched && !document.hidden && document.visibilityState === 'visible') {
+      window.location.href = webUrl;
+    }
+  }, 2800);
 }
 
 function bindExploreAction(id, query, appType) {
@@ -353,3 +369,44 @@ $('btn-choice-camera')?.addEventListener('click', () => {
 $('close-choice-dialog')?.addEventListener('click', () => {
   $('photo-choice-dialog')?.close();
 });
+
+// Background music 《荆州谣》 controller
+const bgAudio = $('bg-audio');
+const musicBtn = $('music-btn');
+const musicDisk = $('music-disk');
+const musicPlayIcon = $('music-play-icon');
+let isMusicPlaying = false;
+
+if (musicBtn && bgAudio) {
+  musicBtn.addEventListener('click', async () => {
+    if (isMusicPlaying) {
+      bgAudio.pause();
+      isMusicPlaying = false;
+      musicDisk.classList.remove('playing');
+      musicDisk.classList.add('paused');
+      musicPlayIcon.textContent = '▶';
+      musicPlayIcon.classList.remove('playing');
+      musicBtn.setAttribute('aria-label', '播放音乐《荆州谣》');
+    } else {
+      try {
+        await bgAudio.play();
+        isMusicPlaying = true;
+        musicDisk.classList.remove('paused');
+        musicDisk.classList.add('playing');
+        musicPlayIcon.textContent = '⏸';
+        musicPlayIcon.classList.add('playing');
+        musicBtn.setAttribute('aria-label', '暂停音乐《荆州谣》');
+      } catch (err) {
+        console.warn('Audio play failed:', err);
+      }
+    }
+  });
+
+  bgAudio.addEventListener('ended', () => {
+    isMusicPlaying = false;
+    musicDisk.classList.remove('playing', 'paused');
+    musicPlayIcon.textContent = '▶';
+    musicPlayIcon.classList.remove('playing');
+    musicBtn.setAttribute('aria-label', '播放音乐《荆州谣》');
+  });
+}
