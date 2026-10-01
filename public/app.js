@@ -119,8 +119,7 @@ catch { status('加载失败，请刷新页面重试。',true); }
 // Native file pickers may offer both camera and gallery. Only advertise a
 // separate camera when we can actually open a live camera stream.
 const canUseCamera = window.isSecureContext && !!navigator.mediaDevices?.getUserMedia;
-$('open-camera').hidden = !canUseCamera;
-if (canUseCamera) $('choose-photo').textContent = '选择照片';
+if ($('open-camera')) $('open-camera').hidden = true;
 let cameraStream = null, cameraVersion = 0;
 function stopCamera() {
   cameraVersion++;
@@ -180,7 +179,7 @@ function applyPhotoStyle(style) {
   activeTravelSettings=style==='travel' ? variant.settings : null;
   $('travel-result-info').hidden=!activeTravelSettings;
   $('travel-result-info').textContent=activeTravelSettings?'当前图片：'+travelModelName(activeTravelSettings.engine)+' · '+travelFramingName(activeTravelSettings.framing):'';
-  if ($('travel-credit')) { $('travel-credit').hidden = !activeTravelScene; $('travel-credit').textContent = activeTravelScene ? travelAttribution(activeTravelScene) : ''; }
+  if ($('travel-credit')) $('travel-credit').hidden = true;
   photo = candidate; activePhotoStyle = style; $('photo').src = photo.src;
   $('image-mode').hidden = style === 'original';
   $('image-mode').textContent = imageTypeLabel(style);
@@ -230,19 +229,54 @@ $('stylize').addEventListener('click',async()=>{
 });
 
 function imageTypeLabel(style) {return style==='travel'?'AI 虚拟旅拍':'AI '+photoStyleNames[style]+'风格图';}
+function travelAttribution(scene) {return scene ? `景点参考：${scene.title}` : '';}
+
+function openAppWithFallback(appScheme, webUrl) {
+  const isMobile = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+  if (!isMobile) {
+    window.open(webUrl, '_blank', 'noopener,noreferrer');
+    return;
+  }
+  const start = Date.now();
+  window.location.href = appScheme;
+  setTimeout(() => {
+    if (document.hidden || Date.now() - start > 2200) return;
+    window.location.href = webUrl;
+  }, 1200);
+}
+
+function bindExploreAction(id, query, appType) {
+  const el = $(id);
+  if (!el) return;
+  const encoded = encodeURIComponent(query);
+  let appScheme = '', webUrl = '';
+  if (appType === 'xhs') {
+    appScheme = `xhsdiscover://search/result?keyword=${encoded}`;
+    webUrl = `https://www.xiaohongshu.com/search_result?keyword=${encoded}`;
+  } else if (appType === 'douyin') {
+    appScheme = `snssdk1128://search?keyword=${encoded}`;
+    webUrl = `https://www.douyin.com/search/${encoded}`;
+  }
+  el.href = webUrl;
+  el.onclick = (e) => {
+    e.preventDefault();
+    openAppWithFallback(appScheme, webUrl);
+  };
+}
+
 function updateExploreLinks(place) {
   if (!place) return;
   const cleanName = place.name.split('·')[0].trim();
-  const xhsUrl = `https://www.xiaohongshu.com/search_result?keyword=${encodeURIComponent('荆州 ' + cleanName + ' 攻略')}`;
-  const douyinUrl = `https://www.douyin.com/search/${encodeURIComponent('荆州 ' + cleanName + ' 游玩')}`;
-  if ($('place-explore-xhs')) $('place-explore-xhs').href = xhsUrl;
-  if ($('place-explore-douyin')) $('place-explore-douyin').href = douyinUrl;
+  const xhsQuery = `荆州 ${cleanName} 打卡攻略`;
+  const douyinQuery = `荆州 ${cleanName} 游玩`;
+  bindExploreAction('place-explore-xhs', xhsQuery, 'xhs');
+  bindExploreAction('place-explore-douyin', douyinQuery, 'douyin');
+  bindExploreAction('scene-explore-xhs', xhsQuery, 'xhs');
+  bindExploreAction('scene-explore-douyin', douyinQuery, 'douyin');
   if ($('place-explore-official')) {
     if (place.source?.url) { $('place-explore-official').href = place.source.url; $('place-explore-official').hidden = false; }
     else { $('place-explore-official').hidden = true; }
   }
-  if ($('scene-explore-xhs')) $('scene-explore-xhs').href = xhsUrl;
-  if ($('scene-explore-douyin')) $('scene-explore-douyin').href = douyinUrl;
 }
 function setSceneImageIndex(idx) {
   const scene = travelScenes.find(s=>s.placeId===$('place').value);

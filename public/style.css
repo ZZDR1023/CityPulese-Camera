@@ -7,6 +7,7 @@
 #scene-preview{display:block;width:100%;max-height:300px;object-fit:contain;background:#e5e7dc;border-radius:5px}#scene-source{display:block;font-size:10px;margin:7px 0;line-height:1.7}#travel-options{margin-top:16px}#travel-credit{font-size:8px;line-height:1.7;overflow-wrap:anywhere;color:var(--muted)}.image-styles .styles span{padding:12px 5px;font-size:11px}
 .place-help,.place-notice{font-size:11px;line-height:1.8;margin:-8px 0 18px;color:var(--muted);overflow-wrap:anywhere}.place-notice{color:#9a5335;border-left:2px solid var(--orange);padding-left:10px;margin-top:0}#culture-notice{color:#9a5335}.paper-meta{gap:10px;align-items:flex-start}.paper-meta span:last-child{flex-shrink:0}#scene-placement{color:var(--green)}
 
+#open-camera,#choose-photo{display:none!important}
 .scene-carousel-box{position:relative;display:flex;align-items:center;justify-content:center;gap:10px;margin:12px 0 6px}
 .carousel-arrow{width:36px;height:36px;border-radius:50%;background:#ffffffd4;border:1px solid #c9d2c2;color:var(--green);font-size:22px;display:grid;place-items:center;cursor:pointer;flex-shrink:0;box-shadow:0 3px 10px #254d3c1c;transition:transform .2s,background .2s;line-height:1}
 .carousel-arrow:hover{background:#fff;transform:scale(1.08)}
