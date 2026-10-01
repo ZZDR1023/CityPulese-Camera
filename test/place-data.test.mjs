@@ -8,9 +8,9 @@ const places=JSON.parse(await readFile(new URL('../data/places.json',import.meta
 const scenes=JSON.parse(await readFile(new URL('../data/travel-scenes.json',import.meta.url)));
 
 test('all expanded places have unique IDs, verified sources, categories and usable examples',()=>{
-  assert.equal(places.length,14);
+  assert.equal(places.length,17);
   assert.equal(new Set(places.map(p=>p.id)).size,places.length);
-  const expected=['jingzhou-wall','jingzhou-museum','chu-chariots','zhang-juzheng','guandi-temple','wanshou-pagoda','weishui','yan-general-cave','honghu-wetland','qujiawan','jingzhou-garden-expo','jingzhou-fantawild','yingcheng-culture-park','yingcheng-panda-park'];
+  const expected=['jingzhou-wall','jingzhou-museum','chu-chariots','zhang-juzheng','guandi-temple','wanshou-pagoda','weishui','yan-general-cave','honghu-wetland','qujiawan','jingzhou-garden-expo','jingzhou-fantawild','yingcheng-culture-park','yingcheng-panda-park','zhanghua-temple','guanyu-shrine','linjiangxian-park'];
   for (const id of expected) assert.ok(places.some(p=>p.id===id),id);
   for (const p of places) {
     assert.ok(['历史人文','自然生态','主题休闲'].includes(p.category));
@@ -25,7 +25,7 @@ test('all expanded places have unique IDs, verified sources, categories and usab
 });
 
 test('approved scenes link to places, JPEGs, attribution and scene-specific standing guidance',async()=>{
-  assert.equal(scenes.length,5);
+  assert.equal(scenes.length,9);
   assert.equal(new Set(scenes.map(s=>s.placeId)).size,scenes.length);
   for (const s of scenes) {
     assert.ok(places.some(p=>p.id===s.placeId));
