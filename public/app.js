@@ -53,6 +53,7 @@ function buttons() {
   const isTravel=document.querySelector('input[name=photo-style]:checked')?.value==='travel';
   $('place').disabled = locked || isTravel;
   $('place-locked-badge').hidden = !isTravel;
+  if ($('toggle-custom-place')) $('toggle-custom-place').hidden = isTravel;
   if ($('custom-place-box')) $('custom-place-box').hidden = isTravel || $('place').value !== 'custom';
   const selectedEngine = isTravel ? $('travel-engine').value : $('style-engine')?.value || 'gemini';
   const available = travelModels.some(m=>m.id===selectedEngine && m.available);
@@ -62,11 +63,14 @@ function buttons() {
 function resetStory() { story = null; $('story-title').textContent = '等一张照片，等一个故事。'; $('story-body').textContent = '把旅行中的一瞬放在这里。写下心情，让回忆有自己的声音。'; $('mode').textContent = '相纸预览'; buttons(); }
 function updatePlace() {
   const p = currentPlace(); if (!p) return;
+  const isCustom = $('place').value === 'custom';
+  if ($('custom-place-box')) $('custom-place-box').hidden = isCustom ? false : true;
+  if ($('toggle-custom-place')) $('toggle-custom-place').textContent = isCustom ? '✓ 已开启自定义地点' : '✏️ 自定义输入地点';
   if (activePhotoStyle==='travel' && activeTravelScene?.placeId!==p.id) applyPhotoStyle('original');
   updateScenePreview(); updateExploreLinks(p); $('paper-place').textContent = p.name; $('culture-fact').textContent = p.fact;
   $('place-notice').hidden = !p.notice; $('place-notice').textContent = p.notice || '';
   $('culture-notice').hidden = !p.notice; $('culture-notice').textContent = p.notice || '';
-  $('place-availability').textContent = travelScenes.some(s=>s.placeId===p.id) ? '已支持实景虚拟旅拍，也可用原片／动漫／水彩制作相纸。' : '文化卡已接入；暂无可确认授权的旅拍背景，原片／动漫／水彩和文案可正常使用。';
+  $('place-availability').textContent = travelScenes.some(s=>s.placeId===p.id) ? '已支持实景虚拟旅拍，也可用原片／动漫／水彩制作相纸。' : (isCustom ? '已启用自定义打卡地，AI 将为你量身定制专属纪念文案。' : '文化卡已接入；暂无可确认授权的旅拍背景，原片／动漫／水彩和文案可正常使用。');
   if ($('source')) $('source').hidden = true;
   resetStory();
 }
@@ -97,6 +101,17 @@ $('place').addEventListener('change', () => {
 });
 $('custom-place-input')?.addEventListener('input', () => {
   if ($('place').value === 'custom') updatePlace();
+});
+$('toggle-custom-place')?.addEventListener('click', () => {
+  $('place').value = 'custom';
+  if ($('custom-place-box')) $('custom-place-box').hidden = false;
+  $('custom-place-input')?.focus();
+  updatePlace();
+});
+$('cancel-custom-place')?.addEventListener('click', () => {
+  $('place').value = places[0]?.id || '';
+  if ($('custom-place-box')) $('custom-place-box').hidden = true;
+  updatePlace();
 });
 $('mood').addEventListener('input', () => { $('counter').textContent = `${[...$('mood').value].length} / 100`; resetStory(); });
 for (const input of document.querySelectorAll('input[name=style]')) input.addEventListener('change', resetStory);
@@ -153,9 +168,9 @@ $('save').addEventListener('click', async () => {
     ctx.fillStyle = '#dfdfd0'; ctx.fillRect(90,y,1020,2); y += 28;
     ctx.fillStyle = '#a0684d'; ctx.font = '24px sans-serif'; ctx.fillText('城脉小记',90,y); y += 42;
     ctx.fillStyle = '#7c8575'; ctx.font = '25px sans-serif'; y = textBlock(ctx,p.fact,90,y,1020,40)+12;
-    ctx.fillStyle = '#89917e'; ctx.font = '21px sans-serif';
-    const styleDetail = activePhotoStyle === 'travel' && activeTravelSettings ? ' · ' + travelModelName(activeTravelSettings.engine) + ' / ' + travelFramingName(activeTravelSettings.framing) : (activePhotoStyle !== 'original' && activeTravelSettings ? ' · ' + travelModelName(activeTravelSettings.engine) : '');
-    if (activePhotoStyle !== 'original') ctx.fillText(imageTypeLabel(activePhotoStyle, activeTravelSettings?.engine)+styleDetail+' · 非原始照片',90,canvas.height-88);
+    const pureStyleLabels = {anime:'动漫风格图',watercolor:'水彩风格图',travel:'虚拟旅拍图'};
+    const styleLabel = pureStyleLabels[activePhotoStyle] || '';
+    if (styleLabel) ctx.fillText(styleLabel,90,canvas.height-88);
     ctx.fillText('城脉相机 · CITY MEMORIES',90,canvas.height-55); ctx.textAlign = 'right'; ctx.fillText(story.mode === 'ai' ? 'AI 纪念文案' : '文案示例 · 非实时生成',1110,canvas.height-55);
     const blob = await new Promise(resolve => canvas.toBlob(resolve,'image/png')); if (!blob) throw Error('相纸导出失败，请重试。');
     if (exportUrl) URL.revokeObjectURL(exportUrl); exportUrl = URL.createObjectURL(blob); $('export-image').src = exportUrl; $('download').href = exportUrl; $('download').download = `城脉相机-${p.name}-${date}.png`; $('export-dialog').showModal(); status('PNG 已生成，请下载或长按预览图片保存。');
@@ -171,7 +186,29 @@ function groupedOptions(items, valueOf, labelOf) {
   }
   return [...groups.values()];
 }
-try { const [placeRes, healthRes, sceneRes] = await Promise.all([fetch('/api/places'), fetch('/api/health'), fetch('/api/travel-scenes')]); if (!placeRes.ok || !healthRes.ok || !sceneRes.ok) throw Error(); places = await placeRes.json(); const health = await healthRes.json(); imageAvailable = !!health.imageConfigured; travelModels=health.travel?.models || [{id:'gemini',label:'Gemini 3.1 · 快速',available:imageAvailable,timeoutSeconds:150}]; $('travel-engine').replaceChildren(...travelModels.map(m=>{const o=new Option(m.label+(m.available?'':' · 未配置'),m.id);o.disabled=!m.available;return o;})); $('travel-engine').value=health.travel?.defaultEngine || 'gemini'; travelScenes = await sceneRes.json(); const placeholder=new Option('选择已支持实景旅拍的景点',''); placeholder.disabled=true; $('travel-place').replaceChildren(placeholder,...groupedOptions(travelScenes,s=>s.placeId,s=>s.title)); $('place').replaceChildren(...groupedOptions(places,p=>p.id,p=>p.name)); updatePlace(); status(health.configured ? '相机已准备好，先选择一张旅行照片。' : '先选择照片体验。AI 服务待配置，离线示例可用。'); }
+try {
+  const [placeRes, healthRes, sceneRes] = await Promise.all([fetch('/api/places'), fetch('/api/health'), fetch('/api/travel-scenes')]);
+  if (!placeRes.ok || !healthRes.ok || !sceneRes.ok) throw Error();
+  places = await placeRes.json();
+  const health = await healthRes.json();
+  imageAvailable = !!health.imageConfigured;
+  travelModels = health.travel?.models || [{id:'gemini',label:'Gemini 3.1 · 快速',available:imageAvailable,timeoutSeconds:150}];
+  $('travel-engine').replaceChildren(...travelModels.map(m=>{const o=new Option(m.label+(m.available?'':' · 未配置'),m.id);o.disabled=!m.available;return o;}));
+  $('travel-engine').value=health.travel?.defaultEngine || 'gemini';
+  if ($('style-engine')) {
+    $('style-engine').replaceChildren(...travelModels.map(m=>{const o=new Option(m.label+(m.available?'':' · 未配置'),m.id);o.disabled=!m.available;return o;}));
+    $('style-engine').value=health.travel?.defaultEngine || 'gemini';
+  }
+  travelScenes = await sceneRes.json();
+  const placeholder=new Option('选择已支持实景旅拍的景点',''); placeholder.disabled=true;
+  $('travel-place').replaceChildren(placeholder,...groupedOptions(travelScenes,s=>s.placeId,s=>s.title));
+  const customGroup = document.createElement('optgroup');
+  customGroup.label = '更多地点';
+  customGroup.append(new Option('✏️ 自定义地点（输入其它荆州地点）…', 'custom'));
+  $('place').replaceChildren(...groupedOptions(places,p=>p.id,p=>p.name), customGroup);
+  updatePlace();
+  status(health.configured ? '相机已准备好，先选择一张旅行照片。' : '先选择照片体验。AI 服务待配置，离线示例可用。');
+}
 catch { status('加载失败，请刷新页面重试。',true); }
 
 // Native file pickers may offer both camera and gallery. Only advertise a
@@ -303,10 +340,11 @@ $('stylize').addEventListener('click',async()=>{
   } finally {clearTimeout(timer);imageBusy=false;imageController=null;$('cancel-stylize').hidden=true;buttons();}
 });
 
-function imageTypeLabel(style, engine) {
-  if (style==='travel') return 'AI 虚拟旅拍';
-  const eng = engine || $('style-engine')?.value;
-  return 'AI '+photoStyleNames[style]+'风格图' + (eng ? ' · ' + travelModelName(eng) : '');
+function imageTypeLabel(style) {
+  if (style === 'anime') return '动漫风格图';
+  if (style === 'watercolor') return '水彩风格图';
+  if (style === 'travel') return '虚拟旅拍图';
+  return '';
 }
 function travelAttribution(scene) {return scene ? `景点参考：${scene.title}` : '';}
 
@@ -362,19 +400,30 @@ function bindExploreAction(id, query, appType) {
   };
 }
 
+function getAmapTarget(name) {
+  if (!name) return '荆州';
+  const parts = name.split(/[·'’\-\/]/).map(s => s.trim()).filter(Boolean);
+  let target = parts.length > 1 ? parts[1] : parts[0];
+  if (!target.includes('荆州')) target = '荆州 ' + target;
+  return target;
+}
+
 function updateExploreLinks(place) {
   if (!place) return;
-  const cleanName = place.name.split('·')[0].trim();
-  const searchPlace = place.id === 'custom' ? cleanName : `荆州 ${cleanName}`;
+  const parts = place.name.split(/[·'’\-\/]/).map(s => s.trim()).filter(Boolean);
+  const cleanTarget = parts.length > 1 ? parts[1] : parts[0];
+  const searchPlace = place.id === 'custom' ? cleanTarget : `荆州 ${cleanTarget}`;
   const xhsQuery = `${searchPlace} 打卡攻略`;
   const douyinQuery = `${searchPlace} 游玩`;
-  const amapQuery = searchPlace;
   bindExploreAction('place-explore-xhs', xhsQuery, 'xhs');
   bindExploreAction('place-explore-douyin', douyinQuery, 'douyin');
-  bindExploreAction('place-explore-amap', amapQuery, 'amap');
   bindExploreAction('scene-explore-xhs', xhsQuery, 'xhs');
   bindExploreAction('scene-explore-douyin', douyinQuery, 'douyin');
-  bindExploreAction('scene-explore-amap', amapQuery, 'amap');
+  
+  // 高德地图：仅在虚拟旅拍区域提供导航，02打卡地不提供导航
+  const scene = travelScenes.find(s => s.placeId === place.id);
+  const amapTarget = getAmapTarget(scene?.title || place.name);
+  bindExploreAction('scene-explore-amap', amapTarget, 'amap');
 }
 function setSceneImageIndex(idx) {
   const scene = travelScenes.find(s=>s.placeId===$('place').value);

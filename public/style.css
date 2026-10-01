@@ -27,6 +27,10 @@
 .explore-pill.amap{background:#1677ff12;border-color:#1677ff38;color:#1677ff;font-weight:500}
 .explore-pill.official{background:#254d3c14;border-color:#254d3c38;color:var(--green);font-weight:500}
 .place-locked-badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;color:var(--green);background:#e2e9d9;padding:4px 10px;border-radius:12px;margin-bottom:12px;font-weight:500}
+.place-header-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.custom-toggle-btn{font-size:11px;color:var(--orange);padding:2px 0;text-decoration:underline;cursor:pointer}
+.custom-place-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.inline-cancel-btn{font-size:11px;color:var(--muted);padding:0;cursor:pointer}
 .custom-place-box{margin-top:-10px;margin-bottom:20px;padding:12px;background:#f3efe580;border:1px dashed #a9b7a0;border-radius:6px}
 .custom-place-box input{margin-bottom:6px}
 .custom-place-tip{font-size:10px;color:var(--muted);margin:0;line-height:1.6}
