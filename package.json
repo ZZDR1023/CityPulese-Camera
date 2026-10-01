@@ -1,0 +1,25 @@
+{
+  "name": "chengmai-camera",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node --env-file-if-exists=.env server.mjs",
+    "test": "node --test",
+    "test:browser": "node scripts/browser-check.cjs",
+    "test:ai": "node scripts/real-ai-check.mjs",
+    "test:browser:ai": "node scripts/browser-real-ai.cjs",
+    "test:style": "node scripts/style-browser-check.cjs",
+    "test:style:ai": "node scripts/style-real-check.mjs",
+    "test:style:browser:ai": "node scripts/style-browser-real.cjs",
+    "test:travel": "node scripts/travel-browser-check.cjs",
+    "test:travel:ai": "node scripts/travel-real-check.mjs",
+    "test:travel:browser:ai": "node scripts/travel-browser-real.cjs"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "devDependencies": {
+    "playwright": "^1.63.0"
+  }
+}

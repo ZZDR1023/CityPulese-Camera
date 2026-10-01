@@ -1,0 +1,22 @@
+[
+  {
+    "placeId": "jingzhou-wall",
+    "image": "/scenes/jingzhou-wall.jpg",
+    "title": "荆州古城墙",
+    "credit": "lienyuan lee",
+    "license": "CC BY 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+    "sourceUrl": "https://commons.wikimedia.org/?curid=57938540",
+    "modifications": "参考图已缩小；虚拟旅拍由 AI 合成人像并改变画面。"
+  },
+  {
+    "placeId": "jingzhou-museum",
+    "image": "/scenes/jingzhou-museum.jpg",
+    "title": "荆州博物馆",
+    "credit": "Zhangzhugang",
+    "license": "CC BY-SA 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
+    "sourceUrl": "https://commons.wikimedia.org/?curid=36074052",
+    "modifications": "参考图已缩小；合成作品公开分享时须署名并使用相同许可。"
+  }
+]
