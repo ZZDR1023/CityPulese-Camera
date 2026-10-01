@@ -1,1 +1,12 @@
-请接手 /home/zzdr1023/orca/projects/黑客松 项目。先完整阅读 HANDOFF.md，再查看 README.md、data/places.json 和 data/travel-scenes.json。现有城脉相机、动漫/水彩风格化、古城墙/博物馆虚拟旅拍已完成，请保留。当前任务是补充用户列出的其余荆州景点，并通过 opencli 搜索必应、小红书及可靠来源，选择平视、前景适合放人、辨识度高且可使用的景区参考图；已有搜索候选保存在 artifacts/commons-candidates.json。继续核验、选图、接入和测试，不要只给计划，也不要把搜索到的错地或未核验素材直接上线。所有新增项目文件尚未提交，请在原目录继续，不要清理、覆盖或创建空的新checkout。密钥已经配置在 .env，不要输出或再索要。用户已授权常规开发、检索和测试，并希望减少不必要确认；执行权限仍以当前会话系统设置为准。先给一句接手进度，然后开始工作。
+请接手 /home/zzdr1023/orca/projects/黑客松 项目。
+先完整阅读 HANDOFF.md 和 README.md。
+
+【当前项目关键状态】：
+1. 生产环境已全功能部署上线，运行在香港云服务器（SSH: cpa-hk），公网正式访问地址为 https://camera.jajaicb.cn（全站 HTTPS、Nginx 反代 3210 端口、PM2 进程常驻且开机自启）。
+2. GitHub 仓库（https://github.com/ZZDR1023/CityPulese-Camera.git）主分支 main、本地工作区与香港服务器完全保持最新同步，14项单元测试全部绿灯。
+3. 官方参赛海报已制作完成并上线（公网直链：https://camera.jajaicb.cn/posters/poster_official.png，本地文件：posters/final/poster_final_scannable.png），具备“州荆”古匾、金色“城脉相机”书法题字、4张真实地标相纸与100%可扫直达网站的纯黑白二维码。
+4. 模型凭据已在本地和服务器的 .env 中配置完整（文字模型、图像模型、以及旅拍三模型 Gemini 3.1 / image2 / image2.5），切勿在对话中输出或重新索要密钥。
+
+【接手后续方向】：
+主要针对黑客松“荆州奇旅”赛道的材料提交准备（知乎发帖文案、海报展示、演示视频录制指导、参赛资料核对等，参考 docs/参赛手册核对与交接.md）。
+请先给出一句简短明确的接手就绪报告，等待用户指示下一步任务。
