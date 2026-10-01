@@ -91,7 +91,7 @@ async function loadPhoto(file) {
     const canvas = document.createElement('canvas'); canvas.width = Math.max(1, Math.round(img.naturalWidth * ratio)); canvas.height = Math.max(1, Math.round(img.naturalHeight * ratio)); canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
     const preview = canvas.toDataURL('image/jpeg', .92); const ready = new Image(); ready.src = preview; await ready.decode();
     if (version !== uploadVersion) return;
-    originalPhoto = ready; photoVariants = {}; travelVariants.clear(); activeTravelScene = null; activeTravelSettings=null; $('travel-result-info').hidden=true; if ($('travel-credit')) $('travel-credit').hidden = true; $('travel-options').hidden = true; activePhotoStyle = 'original'; $('image-consent').checked = false; document.querySelector('input[name=photo-style][value=original]').checked = true; $('stylize-options').hidden = true; $('image-mode').hidden = true; imageStatus('当前使用原片，不上传照片。'); photo = ready; updatePhotoAspect(ready); $('photo').src = preview; $('photo').hidden = false; if ($('empty-photo')) $('empty-photo').hidden = true; $('photo-label').textContent = '照片已就位 · 可重新选择'; resetStory(); status('照片已就位，写下心情，开始出片。');
+    originalPhoto = ready; photoVariants = {}; travelVariants.clear(); activeTravelScene = null; activeTravelSettings=null; $('travel-result-info').hidden=true; if ($('travel-credit')) $('travel-credit').hidden = true; $('travel-options').hidden = true; activePhotoStyle = 'original'; $('image-consent').checked = false; document.querySelector('input[name=photo-style][value=original]').checked = true; $('stylize-options').hidden = true; $('image-mode').hidden = true; imageStatus('当前使用原片，不上传照片。'); photo = ready; updatePhotoAspect(ready); $('photo').src = preview; $('photo').hidden = false; if ($('empty-photo')) $('empty-photo').hidden = true; if ($('upload-placeholder')) $('upload-placeholder').hidden = true; if ($('upload-preview')) $('upload-preview').hidden = false; if ($('upload-thumb')) $('upload-thumb').src = preview; resetStory(); status('照片已就位，写下心情，开始出片。');
   } catch (err) { if (version === uploadVersion) status(err.message || '照片无法读取，请换一张 JPG 或 PNG。', true); }
   finally { if (url) URL.revokeObjectURL(url); if (version === uploadVersion) { photoLoading = false; buttons(); } }
 }
@@ -115,7 +115,16 @@ $('cancel-custom-place')?.addEventListener('click', () => {
 });
 $('mood').addEventListener('input', () => { $('counter').textContent = `${[...$('mood').value].length} / 100`; resetStory(); });
 for (const input of document.querySelectorAll('input[name=style]')) input.addEventListener('change', resetStory);
-function displayStory(result) { story = result; $('story-title').textContent = result.title; $('story-body').textContent = result.body; $('mode').textContent = result.mode === 'ai' ? 'AI 纪念文案' : '文案示例 · 非实时生成'; $('paper').classList.remove('fresh'); void $('paper').offsetWidth; $('paper').classList.add('fresh'); buttons(); }
+function displayStory(result) {
+  story = result;
+  $('story-title').textContent = result.title;
+  $('story-body').textContent = result.body;
+  if ($('mode')) $('mode').textContent = '';
+  $('paper').classList.remove('fresh');
+  void $('paper').offsetWidth;
+  $('paper').classList.add('fresh');
+  buttons();
+}
 if ($('example')) $('example').addEventListener('click', () => { if (!photo || busy || imageBusy) return; displayStory({ ...(activePhotoStyle==='travel' ? {title:'把向往装进相纸',body:'让想象先抵达心中的目的地，把一份旅行的向往留在相纸里。这是一次虚拟的相遇，也是一张写给未来旅程的邀请。愿有一天，我们能真正走近这座城。'} : currentPlace().example), mode: 'example' }); status('当前为固定离线示例，不会根据心情生成。可保存体验相纸。'); });
 $('generate').addEventListener('click', async () => {
   if (busy || imageBusy || !photo) return; busy = true; buttons(); status('正在写纪念文案，约需 5–45 秒，请稍候…'); $('generate').firstElementChild.textContent = '正在生成…';
@@ -171,7 +180,7 @@ $('save').addEventListener('click', async () => {
     const pureStyleLabels = {anime:'动漫风格图',watercolor:'水彩风格图',travel:'虚拟旅拍图'};
     const styleLabel = pureStyleLabels[activePhotoStyle] || '';
     if (styleLabel) ctx.fillText(styleLabel,90,canvas.height-88);
-    ctx.fillText('城脉相机 · CITY MEMORIES',90,canvas.height-55); ctx.textAlign = 'right'; ctx.fillText(story.mode === 'ai' ? 'AI 纪念文案' : '文案示例 · 非实时生成',1110,canvas.height-55);
+    ctx.fillText('城脉相机 · CITY MEMORIES',90,canvas.height-55);
     const blob = await new Promise(resolve => canvas.toBlob(resolve,'image/png')); if (!blob) throw Error('相纸导出失败，请重试。');
     if (exportUrl) URL.revokeObjectURL(exportUrl); exportUrl = URL.createObjectURL(blob); $('export-image').src = exportUrl; $('download').href = exportUrl; $('download').download = `城脉相机-${p.name}-${date}.png`; $('export-dialog').showModal(); status('PNG 已生成，请下载或长按预览图片保存。');
   } catch (err) { status(err.message || '无法导出，请重试。',true); } finally { buttons(); }
@@ -290,7 +299,14 @@ function applyPhotoStyle(style) {
   return true;
 }
 for (const input of document.querySelectorAll('input[name=photo-style]')) input.addEventListener('change', () => {
-  const style=input.value; if (style==='travel' || activePhotoStyle==='travel') resetStory(); $('stylize-options').hidden=style==='original'; $('travel-options').hidden=style!=='travel'; updateScenePreview();
+  const style=input.value;
+  if (style==='travel' || activePhotoStyle==='travel') resetStory();
+  const isTravel = style === 'travel';
+  const isStylize = style === 'anime' || style === 'watercolor';
+  $('stylize-options').hidden = style === 'original';
+  $('travel-options').hidden = !isTravel;
+  if ($('style-engine-box')) $('style-engine-box').hidden = !isStylize;
+  updateScenePreview();
   if (applyPhotoStyle(style)) imageStatus(style==='original'?'已切回原片，不上传照片。':'正在使用已生成的'+photoStyleNames[style]+'风格图，可随时切回原片。');
   else imageStatus(!originalPhoto?'请先选择照片。':(style==='travel'?!travelModels.some(m=>m.id===$('travel-engine').value && m.available):!travelModels.some(m=>m.id===($('style-engine')?.value||'gemini') && m.available))?'所选图像模型尚未配置，仍可使用原片。':'勾选同意后生成'+photoStyleNames[style]+'风格图；当前相纸仍使用'+photoStyleNames[activePhotoStyle]+'。');
   const cached=style==='travel'?travelVariants.has(travelVariantKey()):Boolean(photoVariants[styleVariantKey(style)] || photoVariants[style]);
@@ -502,14 +518,16 @@ $('scene-prev')?.addEventListener('click', () => setSceneImageIndex(currentScene
 $('scene-next')?.addEventListener('click', () => setSceneImageIndex(currentSceneImageIndex + 1));
 
 const isMobileDevice = () => ('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
-$('choose-photo-btn')?.addEventListener('click', () => {
+const handlePickPhoto = () => {
   if (busy || imageBusy || photoLoading) return;
   if (isMobileDevice() || !canUseCamera) {
     $('album').click();
   } else {
     $('photo-choice-dialog')?.showModal();
   }
-});
+};
+$('choose-photo-btn')?.addEventListener('click', handlePickPhoto);
+$('rechoose-photo-btn')?.addEventListener('click', handlePickPhoto);
 $('btn-choice-album')?.addEventListener('click', () => {
   $('photo-choice-dialog')?.close();
   $('album').click();
