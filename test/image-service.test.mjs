@@ -5,7 +5,9 @@ import {createServer} from '../server.mjs';
 const image='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jR1sAAAAASUVORK5CYII=';
 test('style transfer requires explicit consent and inline raster data',()=>{
  assert.equal(validateStylize({image,style:'anime',consent:true}).style,'anime');
- for(const input of [{image,style:'anime'},{image,style:'toString',consent:true},{image:'https://example.com/image.png',style:'anime',consent:true},{image:'data:image/png;base64,YWJj',style:'anime',consent:true}])assert.throws(()=>validateStylize(input));
+ assert.equal(validateStylize({image,style:'anime',consent:true,engine:'image2'}).engine,'image2');
+ assert.equal(validateStylize({image,style:'watercolor',consent:true,engine:'image25'}).engine,'image25');
+ for(const input of [{image,style:'anime'},{image,style:'toString',consent:true},{image,style:'anime',consent:true,engine:'unsupported'},{image:'https://example.com/image.png',style:'anime',consent:true},{image:'data:image/png;base64,YWJj',style:'anime',consent:true}])assert.throws(()=>validateStylize(input));
  assert.throws(()=>parseImageResult({choices:[{message:{images:[{image_url:{url:'http://127.0.0.1/private'}}]}}]}));
  assert.equal(parseImageResult({choices:[{message:{images:[{image_url:{url:image}}]}}]}),image);
 });

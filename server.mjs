@@ -1,5 +1,5 @@
 import http from 'node:http';
-import { imageConfigured, stylizeImage, validateStylize, travelImage, validateTravel, travelOptions, travelSettings, travelEngineConfigured, travelTimeoutMs } from './image-service.mjs';
+import { imageConfigured, stylizeImage, validateStylize, travelImage, validateTravel, travelOptions, travelSettings, travelEngineConfigured, travelTimeoutMs, stylizeTimeoutMs } from './image-service.mjs';
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 
@@ -41,7 +41,20 @@ const configured = () => Boolean(process.env.AI_BASE_URL && process.env.AI_API_K
 const error = (status, message) => Object.assign(new Error(message), { status });
 export function validateInput(input) {
   if (!input || typeof input !== 'object' || Array.isArray(input)) throw error(400, '请求格式不正确。');
-  const place = places.find(p => p.id === input.placeId);
+  let place = places.find(p => p.id === input.placeId);
+  if (!place && (input.placeId === 'custom' || input.customPlace)) {
+    const customName = (input.customPlace || '').trim();
+    if (customName && [...customName].length <= 30) {
+      place = {
+        id: 'custom',
+        name: customName,
+        category: '自定义地点',
+        fact: `记录于荆州「${customName}」的专属足迹与美好瞬间。`,
+        verified: false,
+        notice: '自定义打卡地点'
+      };
+    }
+  }
   if (!place || !['poetic', 'casual'].includes(input.style) || typeof input.mood !== 'string' || [...input.mood].length > 100) throw error(400, '请检查地点、风格和心情（最多 100 字）。');
   return { place, mood: input.mood.trim(), style: input.style };
 }
@@ -80,8 +93,8 @@ export function createServer() {
           for await (const chunk of req) {bytes+=chunk.length;if(bytes>6*1024*1024)throw error(413,'图片请求过大，请换一张照片。');chunks.push(chunk);}
           let input;try{input=JSON.parse(Buffer.concat(chunks).toString());}catch{throw error(400,'请求格式不正确。');}
           if (path === '/api/travel') validateTravel(input,travelScenes); else validateStylize(input);
-          if (path === '/api/travel' ? !travelEngineConfigured(travelSettings(input).engine) : !imageConfigured()) throw error(503,'所选图像模型尚未配置，仍可使用原片或手动选择其他模型。');
-          clearTimeout(timeout);timeout=setTimeout(()=>controller.abort(),path==='/api/travel'?travelTimeoutMs(input):150000);
+          if (path === '/api/travel' ? !travelEngineConfigured(travelSettings(input).engine) : !travelEngineConfigured(input.engine || 'gemini')) throw error(503,'所选图像模型尚未配置，仍可使用原片或手动选择其他模型。');
+          clearTimeout(timeout);timeout=setTimeout(()=>controller.abort(),path==='/api/travel'?travelTimeoutMs(input):stylizeTimeoutMs(input));
           lastImageRequest = Date.now();
           const result=path === '/api/travel' ? await travelImage(input,travelScenes,controller.signal) : await stylizeImage(input,controller.signal);
           return send(200,result);

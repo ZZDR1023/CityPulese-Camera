@@ -5,7 +5,10 @@ import { createServer, validateInput, parseStory } from '../server.mjs';
 test('rejects unknown places, oversized mood and unsupported styles', () => {
   const valid = { placeId: 'jingzhou-wall', mood: '', style: 'poetic' };
   assert.equal(validateInput(valid).place.id, valid.placeId);
-  for (const input of [null, {...valid, placeId:'injected'}, {...valid,mood:'字'.repeat(101)}, {...valid,style:'system'}]) assert.throws(() => validateInput(input));
+  const custom = { placeId: 'custom', customPlace: '沙市洋码头', mood: '', style: 'poetic' };
+  assert.equal(validateInput(custom).place.name, '沙市洋码头');
+  assert.equal(validateInput(custom).place.id, 'custom');
+  for (const input of [null, {...valid, placeId:'injected'}, {...valid, placeId:'custom', customPlace:''}, {...valid, placeId:'custom', customPlace:'字'.repeat(31)}, {...valid,mood:'字'.repeat(101)}, {...valid,style:'system'}]) assert.throws(() => validateInput(input));
 });
 test('model output must be usable bounded text', () => {
   assert.equal(parseStory('```json\n{"title":"荆州","body":"旅行纪念"}\n```').mode, 'ai');
