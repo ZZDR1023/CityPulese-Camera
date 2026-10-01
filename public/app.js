@@ -17,7 +17,18 @@ function buttons() {
 }
 
 function resetStory() { story = null; $('story-title').textContent = '等一张照片，等一个故事。'; $('story-body').textContent = '把旅行中的一瞬放在这里。写下心情，让回忆有自己的声音。'; $('mode').textContent = '相纸预览'; buttons(); }
-function updatePlace() { const p = currentPlace(); if (!p) return; if (activePhotoStyle==='travel' && activeTravelScene?.placeId!==p.id) applyPhotoStyle('original'); if (photoVariants.travelScene?.placeId!==p.id) {delete photoVariants.travel; delete photoVariants.travelScene;} updateScenePreview(); $('paper-place').textContent = p.name; $('culture-fact').textContent = p.fact; $('source').hidden = !p.verified || !p.source; if (p.verified && p.source) { $('source').href = p.source.url; $('source').textContent = `来源：${p.source.name} ↗`; } resetStory(); }
+function updatePlace() {
+  const p = currentPlace(); if (!p) return;
+  if (activePhotoStyle==='travel' && activeTravelScene?.placeId!==p.id) applyPhotoStyle('original');
+  if (photoVariants.travelScene?.placeId!==p.id) {delete photoVariants.travel; delete photoVariants.travelScene;}
+  updateScenePreview(); $('paper-place').textContent = p.name; $('culture-fact').textContent = p.fact;
+  $('place-notice').hidden = !p.notice; $('place-notice').textContent = p.notice || '';
+  $('culture-notice').hidden = !p.notice; $('culture-notice').textContent = p.notice || '';
+  $('place-availability').textContent = travelScenes.some(s=>s.placeId===p.id) ? '已支持实景虚拟旅拍，也可用原片／动漫／水彩制作相纸。' : '文化卡已接入；暂无可确认授权的旅拍背景，原片／动漫／水彩和文案可正常使用。';
+  $('source').hidden = !p.verified || !p.source;
+  if (p.verified && p.source) { $('source').href = p.source.url; $('source').textContent = `来源：${p.source.name} ↗`; }
+  resetStory();
+}
 $('album').addEventListener('change', async e => {
   const file = e.target.files[0]; if (file) await loadPhoto(file);
   e.target.value = '';
@@ -62,6 +73,7 @@ $('save').addEventListener('click', async () => {
     ctx.font = '32px sans-serif'; const bodyLines = lines(ctx, story.body, 1020).length;
     ctx.font = '25px sans-serif'; const factLines = lines(ctx, p.fact, 1020).length;
     let sourceText = p.verified && p.source ? `来源：${p.source.name} ${p.source.url}` : '文化资料待核验';
+    if (p.notice) sourceText += '\n提示：'+p.notice;
     if (activePhotoStyle==='travel' && activeTravelScene) sourceText += '\n'+travelAttribution(activeTravelScene);
     ctx.font = '20px sans-serif'; const sourceLines = lines(ctx, sourceText, 1020).length;
     canvas.height = 1472 + titleLines * 76 + bodyLines * 52 + factLines * 40 + sourceLines * 30;
@@ -80,7 +92,16 @@ $('save').addEventListener('click', async () => {
   } catch (err) { status(err.message || '无法导出，请重试。',true); } finally { buttons(); }
 });
 $('close-dialog').addEventListener('click', () => $('export-dialog').close());
-try { const [placeRes, healthRes, sceneRes] = await Promise.all([fetch('/api/places'), fetch('/api/health'), fetch('/api/travel-scenes')]); if (!placeRes.ok || !healthRes.ok) throw Error(); places = await placeRes.json(); const health = await healthRes.json(); imageAvailable = !!health.imageConfigured; travelScenes = sceneRes.ok ? await sceneRes.json() : []; $('travel-place').replaceChildren(...travelScenes.map(s=>new Option(s.title,s.placeId))); $('place').replaceChildren(...places.map(p => new Option(p.name, p.id))); updatePlace(); status(health.configured ? '相机已准备好，先选择一张旅行照片。' : '先选择照片体验。AI 服务待配置，离线示例可用。'); }
+function groupedOptions(items, valueOf, labelOf) {
+  const groups = new Map();
+  for (const item of items) {
+    const category = item.category || places.find(p=>p.id===item.placeId)?.category || '荆州景点';
+    if (!groups.has(category)) {const group=document.createElement('optgroup'); group.label=category; groups.set(category,group);}
+    groups.get(category).append(new Option(labelOf(item),valueOf(item)));
+  }
+  return [...groups.values()];
+}
+try { const [placeRes, healthRes, sceneRes] = await Promise.all([fetch('/api/places'), fetch('/api/health'), fetch('/api/travel-scenes')]); if (!placeRes.ok || !healthRes.ok || !sceneRes.ok) throw Error(); places = await placeRes.json(); const health = await healthRes.json(); imageAvailable = !!health.imageConfigured; travelScenes = await sceneRes.json(); const placeholder=new Option('选择已支持实景旅拍的景点',''); placeholder.disabled=true; $('travel-place').replaceChildren(placeholder,...groupedOptions(travelScenes,s=>s.placeId,s=>s.title)); $('place').replaceChildren(...groupedOptions(places,p=>p.id,p=>p.name)); updatePlace(); status(health.configured ? '相机已准备好，先选择一张旅行照片。' : '先选择照片体验。AI 服务待配置，离线示例可用。'); }
 catch { status('加载失败，请刷新页面重试。',true); }
 
 // Native file pickers may offer both camera and gallery. Only advertise a
@@ -151,7 +172,7 @@ function applyPhotoStyle(style) {
   return true;
 }
 for (const input of document.querySelectorAll('input[name=photo-style]')) input.addEventListener('change', () => {
-  const style=input.value; if (style==='travel' || activePhotoStyle==='travel') resetStory(); $('stylize-options').hidden=style==='original'; $('travel-options').hidden=style!=='travel'; if (style==='travel' && !travelScenes.some(s=>s.placeId===$('place').value) && travelScenes.length) { $('place').value=$('travel-place').value || travelScenes[0].placeId; updatePlace(); } updateScenePreview();
+  const style=input.value; if (style==='travel' || activePhotoStyle==='travel') resetStory(); $('stylize-options').hidden=style==='original'; $('travel-options').hidden=style!=='travel'; updateScenePreview();
   if (applyPhotoStyle(style)) imageStatus(style==='original'?'已切回原片，不上传照片。':'正在使用已生成的'+photoStyleNames[style]+'风格图，可随时切回原片。');
   else imageStatus(!originalPhoto?'请先选择照片。':!imageAvailable?'图像服务尚未配置，仍可使用原片。':'勾选同意后生成'+photoStyleNames[style]+'风格图；当前相纸仍使用'+photoStyleNames[activePhotoStyle]+'。');
   $('stylize').textContent=photoVariants[style]?'重新生成'+photoStyleNames[style]+'图':'生成'+photoStyleNames[style]+'图';
@@ -161,7 +182,8 @@ $('image-consent').addEventListener('change',buttons);
 $('cancel-stylize').addEventListener('click',()=>imageController?.abort());
 $('stylize').addEventListener('click',async()=>{
   const style=document.querySelector('input[name=photo-style]:checked').value;
-  if (busy || imageBusy || !originalPhoto || style==='original' || !$('image-consent').checked) return;
+  if (busy || imageBusy || !originalPhoto || style==='original' || !$('image-consent').checked || !imageAvailable) return;
+  if (style==='travel' && !travelScenes.some(s=>s.placeId===$('place').value)) {imageStatus('当前景点暂无已授权实景参考图，请主动选择其他旅拍景点，或使用原片。',true); return;}
   const version=uploadVersion;
   imageBusy=true;buttons();$('cancel-stylize').hidden=false;
   imageController=new AbortController();const controller=imageController;
@@ -187,12 +209,14 @@ $('stylize').addEventListener('click',async()=>{
 });
 
 function imageTypeLabel(style) {return style==='travel'?'AI 虚拟旅拍':'AI '+photoStyleNames[style]+'风格图';}
-function travelAttribution(scene) {return `景点参考：${scene.credit} / ${scene.license}（已缩小及 AI 合成） ${scene.sourceUrl} ${scene.licenseUrl}`;}
+function travelAttribution(scene) {return `景点参考：${scene.title} / ${scene.credit} / ${scene.license}；拍摄：${scene.capturedAt || '见来源'}。${scene.modifications} 来源：${scene.sourceUrl} 许可：${scene.licenseUrl}`;}
 function updateScenePreview() {
   const scene=travelScenes.find(s=>s.placeId===$('place').value);
-  $('scene-preview').hidden=!scene; $('scene-source').hidden=!scene;
-  if (scene) { $('travel-place').value=scene.placeId; $('scene-preview').src=scene.image; $('scene-preview').alt=scene.title+'实景参考图'; $('scene-source').href=scene.sourceUrl; $('scene-source').textContent=scene.credit+' · '+scene.license+' · 查看参考图来源 ↗'; }
-  else $('travel-place').selectedIndex=-1;
-  $('scene-license').textContent = scene ? (scene.license.includes('SA') ? '参考图采用 '+scene.license+'；公开分享合成图时请保留署名，并采用相同许可。' : '参考图采用 '+scene.license+'；分享合成图时请保留图片署名与许可信息。') : '此景点暂未提供旅拍参考图。';
+  $('scene-preview').hidden=!scene; $('scene-source').hidden=!scene; $('scene-placement').hidden=!scene;
+  if (scene) { $('travel-place').value=scene.placeId; $('scene-preview').src=scene.image; $('scene-preview').alt=scene.title+'实景参考图'; $('scene-source').href=scene.sourceUrl; $('scene-source').textContent=scene.credit+' · '+scene.license+' · 查看参考图来源 ↗'; $('scene-placement').textContent='构图建议：'+scene.placementHint; }
+  else { $('travel-place').value=''; $('scene-preview').removeAttribute('src'); }
+  $('scene-license').textContent = scene ? '历史实景（'+scene.capturedAt+'），不代表当前景观。'+(scene.license.includes('SA') ? '公开分享改编图时请保留署名，并采用 '+scene.license+'。' : '分享合成图时请保留署名与 '+scene.license+' 许可信息。') : '此景点暂无可确认授权的实景参考图，不会自动改成其他地点。可在上方主动换旅拍景点，或切回原片继续制作。';
+  const style=document.querySelector('input[name=photo-style]:checked')?.value;
+  if (style && style!=='original') $('stylize').textContent=(photoVariants[style]?'重新生成':'生成')+photoStyleNames[style]+'图';
 }
 $('travel-place').addEventListener('change',()=>{ $('place').value=$('travel-place').value; updatePlace(); imageStatus('已切换旅拍景点，请重新生成，当前保留原片或已有风格图。'); buttons(); });

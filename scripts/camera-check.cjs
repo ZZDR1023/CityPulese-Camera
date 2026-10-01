@@ -1,5 +1,8 @@
 const {chromium}=require('playwright');
 const assert=require('node:assert/strict');
+const {networkInterfaces}=require('node:os');
+const lanAddress=Object.values(networkInterfaces()).flat().find(a=>a.family==='IPv4'&&!a.internal&&/^(?:10\.|192\.168\.)/.test(a.address))?.address;
+const lanUrl=process.env.LAN_TEST_URL || (lanAddress ? `http://${lanAddress}:3210` : null);
 (async()=>{
  const browser=await chromium.launch({headless:true,...(process.env.CHROME_PATH?{executablePath:process.env.CHROME_PATH}:{}),args:['--no-sandbox','--use-fake-device-for-media-stream','--use-fake-ui-for-media-stream']});
  try{
@@ -24,7 +27,8 @@ const assert=require('node:assert/strict');
   assert.equal(await page.locator('#take-photo').isDisabled(),true);
   await page.locator('#close-camera').click();
   // LAN HTTP is deliberately an insecure context, as on the user's phone.
-  await page.goto(process.env.LAN_TEST_URL || 'http://192.168.0.108:3210');
+  if(!lanUrl)throw Error('No private LAN address found; set LAN_TEST_URL for insecure-context camera test');
+  await page.goto(lanUrl);
   await page.waitForFunction(()=>document.querySelector('#place').value==='jingzhou-wall');
   assert.equal(await page.evaluate(()=>window.isSecureContext),false);
   assert.equal(await page.locator('#open-camera').isHidden(),true);

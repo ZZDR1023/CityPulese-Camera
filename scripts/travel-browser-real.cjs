@@ -4,17 +4,20 @@ const {chromium}=require('playwright');const fs=require('fs');
  const browser=await chromium.launch({headless:true,...(process.env.CHROME_PATH?{executablePath:process.env.CHROME_PATH}:{}),args:['--no-sandbox']});
  try{
   const page=await browser.newPage({viewport:{width:390,height:844}});const errors=[];page.on('pageerror',e=>errors.push(e.message));
-  await page.goto('http://127.0.0.1:3210');await page.locator('#album').setInputFiles('test/fixtures/travel-person.png');await page.waitForFunction(()=>!document.querySelector('#example').disabled);
-  await page.locator('input[name=photo-style][value=travel]').check();await page.locator('#travel-place').selectOption('jingzhou-museum');await page.locator('#image-consent').check();
+  const placeId=process.argv[2] || 'jingzhou-museum';
+  const scene=JSON.parse(fs.readFileSync('data/travel-scenes.json')).find(s=>s.placeId===placeId);
+  if(!scene)throw Error('Unknown approved scene');
+  await page.goto(process.env.TEST_URL || 'http://127.0.0.1:3210');await page.locator('#album').setInputFiles('test/fixtures/travel-person.png');await page.waitForFunction(()=>!document.querySelector('#example').disabled);
+  await page.locator('input[name=photo-style][value=travel]').check();await page.locator('#travel-place').selectOption(placeId);await page.locator('#image-consent').check();
   const start=Date.now();const responsePromise=page.waitForResponse(r=>r.url().endsWith('/api/travel'),{timeout:165000});await page.locator('#stylize').click();const response=await responsePromise;
   if(response.status()!==200)throw Error(`Image service failed ${response.status()}`);
   await page.waitForFunction(()=>!document.querySelector('#image-mode').hidden&&!document.querySelector('#example').disabled);
   await page.locator('#example').click();await page.locator('#save').click();await page.locator('#export-dialog').waitFor({state:'visible'});
-  const downloadPromise=page.waitForEvent('download');await page.locator('#download').click();const download=await downloadPromise;fs.mkdirSync('artifacts',{recursive:true});await download.saveAs('artifacts/travel-paper.png');await page.locator('#close-dialog').click();
-  await page.screenshot({path:'artifacts/travel-mobile.png',fullPage:true,animations:'disabled'});
+  const downloadPromise=page.waitForEvent('download');await page.locator('#download').click();const download=await downloadPromise;fs.mkdirSync('artifacts',{recursive:true});const exportFile=`artifacts/travel-${placeId}-paper.png`;await download.saveAs(exportFile);await page.locator('#close-dialog').click();
+  await page.screenshot({path:`artifacts/travel-${placeId}-mobile.png`,fullPage:true,animations:'disabled'});
   await page.locator('input[name=photo-style][value=original]').check();if(!await page.locator('#image-mode').isHidden())throw Error('original image not restored');
   if(errors.length)throw Error(errors.join('\n'));
-  const result={checkedAt:new Date().toISOString(),elapsedMs:Date.now()-start,image:'real AI virtual travel at Jingzhou Museum',text:'explicitly labeled offline example',photo:'synthetic fixture',export:'artifacts/travel-paper.png',originalRestored:true,pageErrors:errors};
-  fs.writeFileSync('artifacts/travel-browser-result.json',JSON.stringify(result,null,2));console.log(JSON.stringify(result));
+  const result={checkedAt:new Date().toISOString(),elapsedMs:Date.now()-start,image:'real AI virtual travel',placeId,scene,text:'explicitly labeled offline example',photo:'synthetic fixture',export:exportFile,originalRestored:true,pageErrors:errors};
+  fs.writeFileSync(`artifacts/travel-${placeId}-browser-result.json`,JSON.stringify(result,null,2));console.log(JSON.stringify(result));
  }finally{await browser.close()}
 })().catch(e=>{console.error(e);process.exitCode=1});

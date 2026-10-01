@@ -31,6 +31,10 @@ test('HTTP contract, secrets isolation, upstream request and failure', async () 
       assert.equal(url,'https://model.invalid/v1/chat/completions');
       assert.equal(options.headers.Authorization,'Bearer test-secret');
       const body = JSON.parse(options.body); assert.equal(body.model,'test-model'); assert.ok(body.messages[1].content.includes(input.mood));
+      const material=JSON.parse(body.messages[1].content);
+      assert.match(material.context,/不是已到访的证据/);
+      assert.ok(material.locationNotice);
+      assert.match(body.messages[0].content,/不得推断或宣称景点当前开放/);
       assert.ok(!body.messages[1].content.includes('photo'));
       return Response.json({choices:[{message:{content:JSON.stringify({title:'一起走过荆州',body:'把和朋友一起走过的风景，留在今天的照片里。'})}}]});
     };

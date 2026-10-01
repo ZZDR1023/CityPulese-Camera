@@ -14,10 +14,12 @@
     "test:style:browser:ai": "node scripts/style-browser-real.cjs",
     "test:travel": "node scripts/travel-browser-check.cjs",
     "test:travel:ai": "node scripts/travel-real-check.mjs",
-    "test:travel:browser:ai": "node scripts/travel-browser-real.cjs"
+    "test:travel:browser:ai": "node scripts/travel-browser-real.cjs",
+    "test:expanded:ai": "node scripts/expanded-story-real-check.mjs",
+    "test:camera": "node scripts/camera-check.cjs"
   },
   "engines": {
-    "node": ">=22"
+    "node": ">=22.9"
   },
   "devDependencies": {
     "playwright": "^1.63.0"

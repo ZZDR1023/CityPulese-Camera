@@ -2,21 +2,66 @@
   {
     "placeId": "jingzhou-wall",
     "image": "/scenes/jingzhou-wall.jpg",
-    "title": "荆州古城墙",
-    "credit": "lienyuan lee",
-    "license": "CC BY 3.0",
-    "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
-    "sourceUrl": "https://commons.wikimedia.org/?curid=57938540",
-    "modifications": "参考图已缩小；虚拟旅拍由 AI 合成人像并改变画面。"
+    "title": "荆州古城墙 · 宾阳楼",
+    "credit": "Fxqf",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "sourceUrl": "https://commons.wikimedia.org/?curid=62064293",
+    "capturedAt": "2017-08-31",
+    "modifications": "参考图已缩小、重新编码；虚拟旅拍由 AI 合成人像并改变画面。公开分享改编图须署名并使用 CC BY-SA 4.0。",
+    "placementHint": "人物放在右下方地面，避开中间城门与楼上匾额；保持城楼与城墙可辨认。",
+    "compositionPrompt": "Use the open paved ground in the lower-right foreground for the subject, slightly right of the central gate. Keep the central arch, brick wall and Binyang pavilion recognizable. Do not put the person inside the gate or on the wall. Existing blue seats and small visitors are peripheral background, not subjects to copy. Preserve the visible roof silhouette as photographed; do not invent missing roof details. Fit the reference width into the square layout with minimal reframing."
   },
   {
     "placeId": "jingzhou-museum",
     "image": "/scenes/jingzhou-museum.jpg",
     "title": "荆州博物馆",
+    "credit": "lienyuan lee",
+    "license": "CC BY 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+    "sourceUrl": "https://commons.wikimedia.org/?curid=58634194",
+    "capturedAt": "2002-04-08",
+    "modifications": "参考图已缩小、重新编码；虚拟旅拍由 AI 合成人像并改变画面。",
+    "placementHint": "人物放在右下侧台阶前或下层台阶，脚部贴合地面；保留绿色屋檐与正面入口。",
+    "compositionPrompt": "Place the subject in the lower-right foreground at the foot of the broad museum steps, or on an existing lower step when ground is not visible. Keep a believable foot contact with the same step plane. Do not float the subject on the railing or place them on the decorative carved central stair ramp. Preserve the green tiled eaves, red columns and central entrance. Match the overcast diffuse lighting and oblique perspective."
+  },
+  {
+    "placeId": "zhang-juzheng",
+    "image": "/scenes/zhang-juzheng.jpg",
+    "title": "张居正故居",
+    "credit": "guan",
+    "license": "CC BY 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+    "sourceUrl": "https://commons.wikimedia.org/?curid=51389616",
+    "capturedAt": "2008-12-13",
+    "modifications": "参考图已缩小、重新编码；虚拟旅拍由 AI 合成人像并改变画面。",
+    "placementHint": "人物站在左下方空旷石板广场，避开牌匾、门洞和石狮；右侧车辆不作为主体。",
+    "compositionPrompt": "Place the subject in the lower-left open paved courtyard, left of the entrance axis. Keep the central doorway, stone lions and Zhang Juzheng residence name plaque unobstructed. The cars at the far right are incidental background; exclude them by modest reframing if possible, not by rebuilding the facade. Use the existing paving lines for scale and foot contact. Match soft grey-day illumination."
+  },
+  {
+    "placeId": "guandi-temple",
+    "image": "/scenes/guandi-temple.jpg",
+    "title": "荆州关帝庙",
+    "credit": "guan",
+    "license": "CC BY 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+    "sourceUrl": "https://commons.wikimedia.org/?curid=51389548",
+    "capturedAt": "2008-12-12",
+    "modifications": "参考图已缩小、重新编码；虚拟旅拍由 AI 合成人像并改变画面。",
+    "placementHint": "人物站在左下侧步道，不踩花坛、不挡中央雕像与香炉，保留红柱殿堂。",
+    "compositionPrompt": "Place the subject on the existing lower-left paved walkway, to the left of the central incense burner and statue. Do not stand on planted beds, railings, the burner or the statue plinth. Preserve the central statue and the red-column temple hall behind it. Keep the tree framing and natural courtyard perspective. Match the subdued winter daylight."
+  },
+  {
+    "placeId": "wanshou-pagoda",
+    "image": "/scenes/wanshou-pagoda.jpg",
+    "title": "万寿宝塔",
     "credit": "Zhangzhugang",
     "license": "CC BY-SA 3.0",
     "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
-    "sourceUrl": "https://commons.wikimedia.org/?curid=36074052",
-    "modifications": "参考图已缩小；合成作品公开分享时须署名并使用相同许可。"
+    "sourceUrl": "https://commons.wikimedia.org/?curid=33017338",
+    "capturedAt": "2014-04-20",
+    "modifications": "参考图已缩小、重新编码；虚拟旅拍由 AI 合成人像并改变画面。公开分享改编图须署名并使用 CC BY-SA 3.0。",
+    "placementHint": "人物站在下方步道偏左，完整保留七层塔与塔顶，避免人物遮挡塔身。",
+    "compositionPrompt": "Place the subject on the lower foreground paved path, slightly left of its center. Keep the entire visible seven-storey octagonal pagoda and finial in the background, and do not cover its central silhouette with the subject's head. Keep the surrounding trees and railings. Fit the reference height into the square composition rather than cropping the finial. Never put the person on grass, behind the safety railing or inside the sunken tower enclosure. Match diffuse bright daylight."
   }
 ]
