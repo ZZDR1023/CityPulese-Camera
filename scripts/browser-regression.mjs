@@ -9,8 +9,8 @@ process.env.AI_BASE_URL = 'https://mock.invalid/v1';process.env.AI_API_KEY = 'mo
 process.env.IMAGE_BASE_URL = 'https://mock.invalid/v1';process.env.IMAGE_API_KEY = 'mock';process.env.IMAGE_MODEL = 'mock';
 process.env.TRAVEL_IMAGE2_API_KEY = 'mock';process.env.TRAVEL_IMAGE25_API_KEY = 'mock';
 const server = createServer();await new Promise(r => server.listen(0, '127.0.0.1', r));
-const base = `http://127.0.0.1:${server.address().port}`;
-const output = new URL('../artifacts/optimization/', import.meta.url);await mkdir(output, {recursive: true});
+const base = process.env.TEST_URL || `http://127.0.0.1:${server.address().port}`;
+const output = new URL(process.env.TEST_URL ? '../artifacts/production-regression/' : '../artifacts/optimization/', import.meta.url);await mkdir(output, {recursive: true});
 const places = JSON.parse(await readFile(new URL('../data/places.json', import.meta.url)));
 const scenes = JSON.parse(await readFile(new URL('../data/travel-scenes.json', import.meta.url)));
 const fixture = await readFile(new URL('../test/fixtures/travel-person.png', import.meta.url));
