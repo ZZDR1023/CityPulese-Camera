@@ -5,7 +5,7 @@ import assert from 'node:assert/strict';
 import {mkdir, readFile, writeFile} from 'node:fs/promises';
 import {fileURLToPath} from 'node:url';
 import {createServer} from '../server.mjs';
-const out = new URL('../artifacts/chu-refinement/colors/', import.meta.url);
+const out = new URL(process.env.TEST_URL ? '../artifacts/chu-refinement/public-colors/' : '../artifacts/chu-refinement/colors/', import.meta.url);
 await mkdir(out, {recursive: true});
 const server = process.env.TEST_URL ? null : createServer();
 if (server) await new Promise(r => server.listen(0, '127.0.0.1', r));
@@ -34,10 +34,11 @@ async function comparePreview(page, actual, expected) {
 }
 try {
   for (const mode of ['light', 'dark-preference', 'forced-dark']) {
-    const browser = await chromium.launch({headless: true, executablePath: process.env.CHROME_PATH || '/opt/google/chrome/chrome', args: ['--no-sandbox', ...(mode === 'forced-dark' ? ['--enable-features=WebContentsForceDark', '--force-dark-mode'] : [])]});
+    const browser = await chromium.launch({headless: true, executablePath: process.env.CHROME_PATH || '/opt/google/chrome/chrome', args: ['--no-sandbox', ...(process.env.ART_TEST_HTTP1 === '1' ? ['--disable-http2', '--disable-quic'] : []), ...(mode === 'forced-dark' ? ['--enable-features=WebContentsForceDark', '--force-dark-mode'] : [])]});
     try {
       for (const width of [320, 390, 1440]) {
         const page = await browser.newPage({viewport: {width, height: 1000}, deviceScaleFactor: 2, colorScheme: mode === 'light' ? 'light' : 'dark', reducedMotion: 'reduce'});
+        page.setDefaultTimeout(process.env.TEST_URL ? 90000 : 30000);
         const errors = [];let mockedCalls = 0;
         page.on('pageerror', e => errors.push(e.message));
         page.on('console', m => {if (m.type() === 'error' && /Content Security Policy/.test(m.text())) errors.push(m.text());});
@@ -47,7 +48,10 @@ try {
         });
         await page.route('**/api/stylize', route => route.abort());
         await page.route('**/api/travel', route => route.abort());
-        await page.goto(base);await page.waitForFunction(() => document.querySelector('#place').options.length > 1);
+        // The public page may still be loading a large, unrelated scene image.
+        // Wait for the module/controls we exercise, not window.load for all media.
+        await page.goto(base, {waitUntil: 'domcontentloaded', timeout: process.env.TEST_URL ? 90000 : 30000});
+        await page.waitForFunction(() => document.querySelector('#place').options.length > 1);
         await page.locator('#album').setInputFiles(fileURLToPath(new URL('../test/fixtures/travel-person.png', import.meta.url)));
         await page.waitForFunction(() => !document.querySelector('#generate').disabled);
         await page.locator('#generate').click();await page.waitForFunction(() => !document.querySelector('#save').disabled);
@@ -100,10 +104,11 @@ try {
         assert.equal(await page.locator('.chu-corner').count(), 2);
         assert.equal(mockedCalls, 1);assert.deepEqual(errors, []);
         results.push({mode, width, metrics, stablePreviewAndExportColorsAcrossColorModes: true, mockedStoryCalls: mockedCalls, realModelCalls: 0, errors});
+        console.log(`PASS ${mode} / ${width}px / paper + passport`);
         await page.close();
       }
     } finally {await browser.close();}
   }
-  await writeFile(new URL('results.json', out), JSON.stringify({passed: true, testUrl: base, results}, null, 2));
+  await writeFile(new URL('results.json', out), JSON.stringify({passed: true, testUrl: base, http1Only: process.env.ART_TEST_HTTP1 === '1', results}, null, 2));
   console.log(JSON.stringify({passed: true, results}, null, 2));
 } finally {if (server) {server.closeAllConnections();await new Promise(r => server.close(r));}}
