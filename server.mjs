@@ -81,7 +81,7 @@ export function parseStory(content) {
 export function createServer(options = {}) {
   const integer = (value, fallback, max) => Number.isInteger(Number(value)) && Number(value) > 0 ? Math.min(Number(value), max) : fallback;
   const imageGate = new RequestGate({concurrency: integer(process.env.IMAGE_CONCURRENCY, 2, 3), maxQueue: 6, cooldownMs: 10000, maxCalls: integer(process.env.IMAGE_MAX_CALLS_PER_HOUR, 100, 300), ...options.imageGate});
-  const storyGate = new RequestGate({concurrency: 3, maxQueue: 8, cooldownMs: 5000, maxCalls: integer(process.env.STORY_MAX_CALLS_PER_HOUR, 120, 1000), ...options.storyGate});
+  const storyGate = new RequestGate({concurrency: 3, maxQueue: 8, cooldownMs: 5000, maxCalls: integer(process.env.STORY_MAX_CALLS_PER_HOUR, 240, 1000), ...options.storyGate});
   const secret = randomBytes(32);
   const signature = id => createHmac('sha256', secret).update(id).digest('hex');
   const sessionKey = req => {
