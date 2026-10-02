@@ -9,6 +9,7 @@
     "test:browser": "node scripts/browser-regression.mjs",
     "test:regression": "node scripts/browser-regression.mjs",
     "test:art": "node scripts/chu-art-check.mjs",
+    "test:art:colors": "node scripts/chu-color-check.mjs",
     "test:ai": "node scripts/real-ai-check.mjs",
     "test:browser:ai": "node scripts/browser-real-ai.cjs",
     "test:style": "node scripts/style-browser-check.cjs",

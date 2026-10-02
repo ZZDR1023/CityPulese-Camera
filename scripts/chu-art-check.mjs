@@ -36,7 +36,7 @@ try {
           overflow: document.documentElement.scrollWidth > innerWidth,
           headerAbovePhoto: header.getBoundingClientRect().bottom <= photo.getBoundingClientRect().top + 6,
           stampAboveMood: stamp.getBoundingClientRect().bottom <= mood.getBoundingClientRect().top + 10,
-          brickCount: paper.querySelectorAll('.chu-brick').length, corners: paper.querySelectorAll('.chu-header-svg g[transform]').length};
+          brickCount: paper.querySelectorAll('.chu-brick').length, corners: paper.querySelectorAll('.chu-header-svg .chu-corner').length};
       });assert.equal(metrics.overflow, false);assert.equal(metrics.brickCount, 2);assert.equal(metrics.corners, 2);assert.equal(metrics.headerAbovePhoto, true);if (format === 'passport') assert.equal(metrics.stampAboveMood, true);
       titleProperties.push({title: metrics.title, font: metrics.font, size: metrics.size});
       await page.locator('#paper').screenshot({path: fileURLToPath(new URL(`${format}-preview-${width}.png`, out)), animations: 'disabled'});
