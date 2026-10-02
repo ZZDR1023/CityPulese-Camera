@@ -1,11 +1,13 @@
 import {openAppWithFallback} from './app-links.js';
 import {buildPassport, readStamps, addStamp, writeStamps, memoryStorageKey} from './memory-passport.js';
-import {paperThemes, phoenixPath, renderPaper} from './paper-renderer.js';
+import {paperThemes, renderPaper} from './paper-renderer.js';
+import {headerMarkup, ornamentMarkup, stampMarkup, waveSvg, chuHeaderTitle, ensureDisplayFont} from './chu-artwork.js';
 const $ = id => document.getElementById(id);
 let inputVersion = 0, exporting = false, imageQueueWaitSeconds = 50;
 let paperFormat = 'paper', paperTheme = 'classic', memoryStamps = [];
 try { memoryStamps = readStamps(localStorage); } catch {}
-for (const path of document.querySelectorAll('.phoenix-line')) path.setAttribute('d', phoenixPath);
+$('chu-frame-art').innerHTML = ornamentMarkup();
+for (const strip of document.querySelectorAll('.chu-side')) strip.style.backgroundImage = `url("data:image/svg+xml,${encodeURIComponent(waveSvg())}")`;
 let places = [], photo = null, story = null, busy = false, photoLoading = false, uploadVersion = 0, exportUrl;
 let originalPhoto = null, photoVariants = {}, activePhotoStyle = 'original', imageBusy = false, imageAvailable = false, imageController = null;
 let travelScenes = [], activeTravelScene = null, activeTravelSettings = null;
@@ -174,7 +176,9 @@ function updateMemoryPreview() {
   $('paper').dataset.format = paperFormat;
   const isPassport = paperFormat === 'passport';
   $('edition-band').hidden = !isPassport && paperTheme !== 'chuyun';
-  $('edition-title').textContent = isPassport ? '荆州 · 城市记忆护照' : '荆州限定 · 楚韵纪念';
+  $('edition-title').textContent = paperTheme === 'chuyun' ? chuHeaderTitle : '荆州 · 城市记忆护照';
+  $('edition-subtitle').textContent = isPassport ? '城市记忆护照' : '经典纪念相纸';
+  $('chu-header-art').innerHTML = paperTheme === 'chuyun' ? headerMarkup(paperFormat) : '';
   $('passport-details').hidden = !isPassport;
   $('memory-collection').hidden = !isPassport;
   const culture = $('culture-card');
@@ -189,6 +193,7 @@ function updateMemoryPreview() {
   else $('culture-fact').textContent = currentPlace().fact;
   $('stamp-word').textContent = passport.kind === 'wish' ? '向往' : '记忆';
   $('memory-stamp').dataset.kind = passport.kind;
+  $('memory-stamp-art').innerHTML = stampMarkup(passport.kind, currentPlace(), paperTheme === 'chuyun' ? '#dcb96f' : '#a0684d');
   $('stamp-title').textContent = passport.stamp;
   $('stamp-boundary').textContent = passport.boundary;
   $('passport-mood').textContent = passport.mood;
@@ -247,7 +252,7 @@ $('save').addEventListener('click', async () => {
   const p = currentPlace(), snapshot = {photo, place: p, story, date, photoStyle: activePhotoStyle, theme: paperTheme, format: paperFormat, passport: currentPassport()};
   exporting = true; buttons();
   try {
-    await document.fonts.ready;
+    await ensureDisplayFont();
     const canvas = renderPaper(snapshot);
     const blob = await new Promise(resolve => canvas.toBlob(resolve,'image/png')); if (!blob) throw Error('相纸导出失败，请重试。');
     if (exportUrl) URL.revokeObjectURL(exportUrl); exportUrl = URL.createObjectURL(blob); $('export-image').src = exportUrl; $('download').href = exportUrl; $('download').download = `城脉相机-${snapshot.format === 'passport' ? '记忆护照-' : ''}${paperThemes[snapshot.theme].name}-${p.name}-${date}.png`; $('export-dialog').showModal(); status('PNG 已生成，请下载或长按预览图片保存。');
@@ -479,10 +484,13 @@ function updateExploreLinks(place) {
   bindExploreAction('scene-explore-xhs', xhsQuery, 'xhs');
   bindExploreAction('scene-explore-douyin', douyinQuery, 'douyin');
   
-  // 高德地图：仅在虚拟旅拍区域提供导航，02打卡地不提供导航
+  // 无论原片、动漫、水彩还是虚拟旅拍，均提供高德地图导航
+  const placeAmapTarget = getAmapTarget(place.name);
+  bindExploreAction('place-explore-amap', placeAmapTarget, 'amap');
+
   const scene = travelScenes.find(s => s.placeId === place.id);
-  const amapTarget = getAmapTarget(scene?.title || place.name);
-  bindExploreAction('scene-explore-amap', amapTarget, 'amap');
+  const sceneAmapTarget = getAmapTarget(scene?.title || place.name);
+  bindExploreAction('scene-explore-amap', sceneAmapTarget, 'amap');
 }
 function setSceneImageIndex(idx) {
   if (busy || imageBusy || exporting) return;
@@ -591,6 +599,9 @@ const musicDisk = $('music-disk');
 const musicPlayIcon = $('music-play-icon');
 let isMusicPlaying = false;
 
+const MUSIC_PLAY_SVG = '<svg viewBox="0 0 24 24" width="100%" height="100%" fill="currentColor" aria-hidden="true"><path d="M7 4.5v15l12-7.5z"/></svg>';
+const MUSIC_PAUSE_SVG = '<svg viewBox="0 0 24 24" width="100%" height="100%" fill="currentColor" aria-hidden="true"><path d="M6 4.5h4v15H6zm8 0h4v15h-4z"/></svg>';
+
 if (musicBtn && bgAudio) {
   musicBtn.addEventListener('click', async () => {
     if (isMusicPlaying) {
@@ -598,7 +609,7 @@ if (musicBtn && bgAudio) {
       isMusicPlaying = false;
       musicDisk.classList.remove('playing');
       musicDisk.classList.add('paused');
-      musicPlayIcon.textContent = '▶';
+      musicPlayIcon.innerHTML = MUSIC_PLAY_SVG;
       musicPlayIcon.classList.remove('playing');
       musicBtn.setAttribute('aria-label', '播放音乐《荆州谣》');
     } else {
@@ -607,7 +618,7 @@ if (musicBtn && bgAudio) {
         isMusicPlaying = true;
         musicDisk.classList.remove('paused');
         musicDisk.classList.add('playing');
-        musicPlayIcon.textContent = '⏸';
+        musicPlayIcon.innerHTML = MUSIC_PAUSE_SVG;
         musicPlayIcon.classList.add('playing');
         musicBtn.setAttribute('aria-label', '暂停音乐《荆州谣》');
       } catch (err) {
@@ -619,7 +630,7 @@ if (musicBtn && bgAudio) {
   bgAudio.addEventListener('ended', () => {
     isMusicPlaying = false;
     musicDisk.classList.remove('playing', 'paused');
-    musicPlayIcon.textContent = '▶';
+    musicPlayIcon.innerHTML = MUSIC_PLAY_SVG;
     musicPlayIcon.classList.remove('playing');
     musicBtn.setAttribute('aria-label', '播放音乐《荆州谣》');
   });

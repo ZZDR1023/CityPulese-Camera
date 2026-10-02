@@ -13,7 +13,14 @@ const publicFiles = new Map([
   ['/app-links.js', 'app-links.js'],
   ['/memory-passport.js', 'memory-passport.js'],
   ['/paper-renderer.js', 'paper-renderer.js'],
+  ['/chu-artwork.js', 'chu-artwork.js'],
+  ['/fonts/citypulse-display.woff2', 'fonts/citypulse-display.woff2'],
+  ['/fonts/OFL.txt', 'fonts/OFL.txt'],
   ['/style.css', 'style.css'],
+  ['/favicon.png', 'favicon.png'],
+  ['/brand/logo.png', 'brand/logo.png'],
+  ['/brand/logo-128.png', 'brand/logo-128.png'],
+  ['/brand/logo-64.png', 'brand/logo-64.png'],
   ['/qrcode.png', 'qrcode.png'],
   ['/qrcode.svg', 'qrcode.svg'],
   ['/qrcode-card.png', 'qrcode-card.png'],
@@ -40,7 +47,9 @@ const mime = {
   js: 'text/javascript; charset=utf-8',
   css: 'text/css; charset=utf-8',
   mp3: 'audio/mpeg',
-  webp: 'image/webp'
+  webp: 'image/webp',
+  woff2: 'font/woff2',
+  txt: 'text/plain; charset=utf-8'
 };
 const configured = () => Boolean(process.env.AI_BASE_URL && process.env.AI_API_KEY && process.env.AI_MODEL);
 const error = (status, message) => Object.assign(new Error(message), { status });

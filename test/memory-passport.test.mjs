@@ -7,7 +7,7 @@ test('memory and wish passports distinguish self-records from fictional travel a
   for (const place of places) {
     const memory = buildPassport(place, places, {mood: '和朋友的快乐', kind: 'memory'});
     const wish = buildPassport(place, places, {kind: 'wish'});
-    assert.equal(memory.discovery, place.fact);assert.equal(memory.stamp, '记忆印章');assert.match(memory.boundary, /不作到访认证/);
+    assert.equal(memory.discovery, place.fact);assert.equal(memory.stamp, '记忆印章');assert.equal(memory.boundary, '用户记录');
     assert.equal(wish.stamp, '向往印章');assert.match(wish.boundary, /不代表真实到访/);
     assert.ok(places.some(p => p.id === memory.next.id && p.id !== place.id));
     assert.notEqual(memory.next.id, 'yingcheng-panda-park');

@@ -56,7 +56,7 @@ try {
       exports.push({format, theme, ...await save(`${format}-${theme}`)});
     }
     assert.equal(storyCalls, beforeFormats);assert.equal(imageCalls, 0);
-    assert.match(await page.locator('#passport-mood').textContent(), /和朋友/);assert.match(await page.locator('#stamp-boundary').textContent(), /不作到访认证/);
+    assert.match(await page.locator('#passport-mood').textContent(), /和朋友/);assert.match(await page.locator('#stamp-boundary').textContent(), /用户记录/);
     await page.locator('#collect-memory').click();assert.equal(await page.locator('.collected-stamp').count(), 1);await page.locator('#collect-memory').click();assert.equal(await page.locator('.collected-stamp').count(), 1);
     const stored = await page.evaluate(() => localStorage.getItem('chengmai-memory-stamps-v1'));assert.ok(!stored.includes('快乐') && !stored.includes('data:'));assert.equal(JSON.parse(stored)[0].kind, 'memory');
     await page.screenshot({path: fileURLToPath(new URL(`passport-chuyun-ui-${viewport.width}.png`, output)), fullPage: true, animations: 'disabled'});

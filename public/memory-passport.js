@@ -23,7 +23,7 @@ export function buildPassport(place, places, {mood = '', kind = 'memory'} = {}) 
   return {
     kind,
     stamp: kind === 'wish' ? '向往印章' : '记忆印章',
-    boundary: kind === 'wish' ? '虚拟旅拍 · 不代表真实到访' : '用户记录 · 不作到访认证',
+    boundary: kind === 'wish' ? '虚拟旅拍 · 不代表真实到访' : '用户记录',
     mood: mood.trim() || '把这一刻收藏，给下一次探索留一点期待。',
     discovery: place.verified ? place.fact : '自定义地点仅记录个人心情，暂无已核验的文化发现。',
     next: next ? {id: next.id, name: next.name, reason: pair[1]} : null
