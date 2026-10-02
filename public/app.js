@@ -1,4 +1,11 @@
+import {openAppWithFallback} from './app-links.js';
+import {buildPassport, readStamps, addStamp, writeStamps, memoryStorageKey} from './memory-passport.js';
+import {paperThemes, phoenixPath, renderPaper} from './paper-renderer.js';
 const $ = id => document.getElementById(id);
+let inputVersion = 0, exporting = false, imageQueueWaitSeconds = 50;
+let paperFormat = 'paper', paperTheme = 'classic', memoryStamps = [];
+try { memoryStamps = readStamps(localStorage); } catch {}
+for (const path of document.querySelectorAll('.phoenix-line')) path.setAttribute('d', phoenixPath);
 let places = [], photo = null, story = null, busy = false, photoLoading = false, uploadVersion = 0, exportUrl;
 let originalPhoto = null, photoVariants = {}, activePhotoStyle = 'original', imageBusy = false, imageAvailable = false, imageController = null;
 let travelScenes = [], activeTravelScene = null, activeTravelSettings = null;
@@ -45,11 +52,12 @@ function updatePhotoAspect(img) {
 }
 function status(message, isError = false) { $('status').textContent = message; $('status').classList.toggle('error', isError); }
 function buttons() {
-  const locked = busy || imageBusy;
+  const locked = busy || imageBusy || exporting;
   $('generate').disabled = locked || photoLoading || !photo || !places.length;
   if ($('example')) $('example').disabled = locked || photoLoading || !photo || !places.length;
   $('save').disabled = locked || photoLoading || !story || !photo;
-  for (const el of document.querySelectorAll('#mood,input,#open-camera,#travel-place,#travel-engine,#travel-framing,#style-engine')) el.disabled = locked;
+  for (const el of document.querySelectorAll('#mood,input,#open-camera,#travel-place,#travel-engine,#travel-framing,#style-engine,#toggle-custom-place,#cancel-custom-place,#scene-prev,#scene-next,#choose-photo-btn,#rechoose-photo-btn,#choose-next-stop,#clear-memories')) el.disabled = locked || photoLoading;
+  $('collect-memory').disabled = locked || photoLoading || !story || !photo || currentPlace()?.id === 'custom';
   const isTravel=document.querySelector('input[name=photo-style]:checked')?.value==='travel';
   $('place').disabled = locked || isTravel;
   $('place-locked-badge').hidden = !isTravel;
@@ -60,7 +68,7 @@ function buttons() {
   $('stylize').disabled = locked || photoLoading || !originalPhoto || !available || !$('image-consent').checked || (isTravel && !travelScenes.some(s=>s.placeId===$('place').value));
 }
 
-function resetStory() { story = null; $('story-title').textContent = '等一张照片，等一个故事。'; $('story-body').textContent = '把旅行中的一瞬放在这里。写下心情，让回忆有自己的声音。'; $('mode').textContent = '相纸预览'; buttons(); }
+function resetStory() { inputVersion++; story = null; $('story-title').textContent = '等一张照片，等一个故事。'; $('story-body').textContent = '把旅行中的一瞬放在这里。写下心情，让回忆有自己的声音。'; $('mode').textContent = '相纸预览'; updateMemoryPreview(); buttons(); }
 function updatePlace() {
   const p = currentPlace(); if (!p) return;
   const isCustom = $('place').value === 'custom';
@@ -103,12 +111,14 @@ $('custom-place-input')?.addEventListener('input', () => {
   if ($('place').value === 'custom') updatePlace();
 });
 $('toggle-custom-place')?.addEventListener('click', () => {
+  if (busy || imageBusy || exporting || photoLoading) return;
   $('place').value = 'custom';
   if ($('custom-place-box')) $('custom-place-box').hidden = false;
   $('custom-place-input')?.focus();
   updatePlace();
 });
 $('cancel-custom-place')?.addEventListener('click', () => {
+  if (busy || imageBusy || exporting || photoLoading) return;
   $('place').value = places[0]?.id || '';
   if ($('custom-place-box')) $('custom-place-box').hidden = true;
   updatePlace();
@@ -123,67 +133,125 @@ function displayStory(result) {
   $('paper').classList.remove('fresh');
   void $('paper').offsetWidth;
   $('paper').classList.add('fresh');
+  updateMemoryPreview();
   buttons();
 }
 if ($('example')) $('example').addEventListener('click', () => { if (!photo || busy || imageBusy) return; displayStory({ ...(activePhotoStyle==='travel' ? {title:'把向往装进相纸',body:'让想象先抵达心中的目的地，把一份旅行的向往留在相纸里。这是一次虚拟的相遇，也是一张写给未来旅程的邀请。愿有一天，我们能真正走近这座城。'} : currentPlace().example), mode: 'example' }); status('当前为固定离线示例，不会根据心情生成。可保存体验相纸。'); });
 $('generate').addEventListener('click', async () => {
-  if (busy || imageBusy || !photo) return; busy = true; buttons(); status('正在写纪念文案，约需 5–45 秒，请稍候…'); $('generate').firstElementChild.textContent = '正在生成…';
+  if (busy || imageBusy || exporting || !photo) return;
+  const version = inputVersion, snapshot = JSON.stringify(storyInput());
+  busy = true; buttons(); status('正在写纪念文案，多人体验时会自动等待空位，请稍候…'); $('generate').firstElementChild.textContent = '正在生成…';
   try {
-    const isCustom = $('place').value === 'custom';
-    const customName = ($('custom-place-input')?.value || '').trim() || '荆州';
     const res = await fetch('/api/story', {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({
-        placeId: isCustom ? 'custom' : $('place').value,
-        customPlace: isCustom ? customName : undefined,
-        mood: $('mood').value,
-        style: document.querySelector('input[name=style]:checked').value,
-        photoMode: activePhotoStyle==='travel'?'travel':'photo'
-      }),
-      signal: AbortSignal.timeout(50000)
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: snapshot, signal: AbortSignal.timeout(95000)
     });
     const data = await res.json();
     if (!res.ok) throw Error(data.error || '生成失败，请重试。');
+    if (version !== inputVersion || snapshot !== JSON.stringify(storyInput())) {
+      status('输入已改变，已丢弃旧文案。请按当前地点重新生成。');
+      return;
+    }
     displayStory(data);
     status('相纸已出片。收藏今天，也记得检查文案是否合心意。');
   } catch (err) {
     status(err.name === 'TimeoutError' ? '等待超时。照片和心情已保留，可重试或体验离线示例。' : err.message || '连接失败，请重试。', true);
   } finally {
-    busy = false; buttons(); $('generate').firstElementChild.textContent = '生成我的纪念相纸';
+    busy = false; updateMemoryPreview(); buttons();
   }
 });
-function lines(ctx, value, maxWidth) { const output = []; for (const paragraph of value.split('\n')) { let line = ''; for (const char of paragraph) { if (ctx.measureText(line + char).width > maxWidth && line) { if ('，。！？；：、）》】”’'.includes(char)) { output.push(line + char); line = ''; } else { output.push(line); line = char; } } else line += char; } if (line || !paragraph) output.push(line); } return output; }
-function textBlock(ctx, text, x, y, width, lineHeight) { for (const line of lines(ctx, text, width)) { ctx.fillText(line, x, y); y += lineHeight; } return y; }
+function storyInput() {
+  const custom = $('place').value === 'custom';
+  return {placeId: $('place').value, customPlace: custom ? ($('custom-place-input').value.trim() || '荆州') : undefined, mood: $('mood').value, style: document.querySelector('input[name=style]:checked').value, photoMode: activePhotoStyle === 'travel' ? 'travel' : 'photo', uploadVersion};
+}
+function currentPassport() {
+  const place = currentPlace();
+  return place ? buildPassport(place, places, {mood: $('mood').value, kind: activePhotoStyle === 'travel' ? 'wish' : 'memory'}) : null;
+}
+function updateMemoryPreview() {
+  const passport = currentPassport();
+  $('paper').dataset.theme = paperTheme;
+  $('paper').dataset.format = paperFormat;
+  const isPassport = paperFormat === 'passport';
+  $('edition-band').hidden = !isPassport && paperTheme !== 'chuyun';
+  $('edition-title').textContent = isPassport ? '荆州 · 城市记忆护照' : '荆州限定 · 楚韵纪念';
+  $('passport-details').hidden = !isPassport;
+  $('memory-collection').hidden = !isPassport;
+  const culture = $('culture-card');
+  if (isPassport) $('passport-details').insertBefore(culture, $('next-stop'));
+  else $('travel-credit').before(culture);
+  $('culture-heading').textContent = isPassport ? '这一站的文化发现' : '城脉小记';
+  $('save').textContent = isPassport ? '↓ 保存记忆护照' : '↓ 保存相纸';
+  if (!busy) $('generate').firstElementChild.textContent = isPassport ? '生成我的记忆护照' : '生成我的纪念相纸';
+  $('export-title').textContent = isPassport ? '你的城市记忆护照已出片' : '你的相纸已出片';
+  if (!passport) return;
+  if (isPassport) $('culture-fact').textContent = passport.discovery;
+  else $('culture-fact').textContent = currentPlace().fact;
+  $('stamp-word').textContent = passport.kind === 'wish' ? '向往' : '记忆';
+  $('memory-stamp').dataset.kind = passport.kind;
+  $('stamp-title').textContent = passport.stamp;
+  $('stamp-boundary').textContent = passport.boundary;
+  $('passport-mood').textContent = passport.mood;
+  $('next-stop').hidden = !passport.next;
+  if (passport.next) {
+    $('next-stop-name').textContent = passport.next.name;
+    $('next-stop-reason').textContent = passport.next.reason;
+    $('next-stop-map').href = 'https://uri.amap.com/search?keyword=' + encodeURIComponent(passport.next.name) + '&city=' + encodeURIComponent('荆州') + '&src=citypulse-camera';
+  }
+  renderCollection();
+}
+function renderCollection() {
+  const valid = memoryStamps.filter(e => places.some(p => p.id === e.placeId));
+  $('collected-stamps').replaceChildren(...valid.map(entry => {
+    const chip = document.createElement('span'); chip.className = 'collected-stamp';
+    chip.dataset.kind = entry.kind;
+    chip.textContent = `${entry.kind === 'wish' ? '向往' : '记忆'} · ${places.find(p => p.id === entry.placeId).name}`;
+    return chip;
+  }));
+  $('clear-memories').hidden = !valid.length;
+  $('collection-status').textContent = valid.length ? `已收藏 ${valid.length} 枚印章。仅本机保存点位、类型和日期，不保存照片或心情。` : '只在本机保存点位、印章类型和日期，不保存照片或心情。';
+}
+for (const input of document.querySelectorAll('input[name=paper-format],input[name=paper-theme]')) input.addEventListener('change', () => {
+  paperFormat = document.querySelector('input[name=paper-format]:checked').value;
+  paperTheme = document.querySelector('input[name=paper-theme]:checked').value;
+  updateMemoryPreview(); buttons();
+});
+$('collect-memory').addEventListener('click', () => {
+  if (!story || !photo || busy || imageBusy || exporting || currentPlace().id === 'custom') return;
+  memoryStamps = addStamp(memoryStamps, {placeId: currentPlace().id, kind: currentPassport().kind, date});
+  let persisted = false; try { persisted = writeStamps(localStorage, memoryStamps); } catch {}
+  renderCollection();
+  if (!persisted) $('collection-status').textContent = '本机存储不可用，印章暂存在本页，关闭页面后不保留。';
+});
+$('clear-memories').addEventListener('click', () => {
+  if (busy || imageBusy || exporting) return;
+  memoryStamps = []; let cleared = true;
+  try { localStorage.removeItem(memoryStorageKey); } catch { cleared = false; }
+  renderCollection();
+  if (!cleared) $('collection-status').textContent = '本页印章已清空，但浏览器阻止了存储清理；请在浏览器设置中清除本网站数据。';
+});
+$('choose-next-stop').addEventListener('click', () => {
+  if (busy || imageBusy || exporting || photoLoading) return;
+  const next = currentPassport()?.next; if (!next) return;
+  if (document.querySelector('input[name=photo-style]:checked').value === 'travel' || activePhotoStyle === 'travel') {
+    applyPhotoStyle('original');
+    document.querySelector('input[name=photo-style][value=original]').checked = true;
+    $('travel-options').hidden = true; $('stylize-options').hidden = true;
+  }
+  $('place').value = next.id; updatePlace();
+  status('已选择下一站，仅作探索与纪念；地点选择不代表到访。');
+  $('place').scrollIntoView({behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth', block: 'center'});
+});
 $('save').addEventListener('click', async () => {
-  if (!photo || !story || busy || imageBusy) return;
-  $('save').disabled = true;
+  if (!photo || !story || busy || imageBusy || exporting) return;
+  const p = currentPlace(), snapshot = {photo, place: p, story, date, photoStyle: activePhotoStyle, theme: paperTheme, format: paperFormat, passport: currentPassport()};
+  exporting = true; buttons();
   try {
     await document.fonts.ready;
-    const p = currentPlace(); const canvas = document.createElement('canvas'); canvas.width = 1200; const ctx = canvas.getContext('2d');
-    ctx.font = '54px serif'; const titleLines = lines(ctx, story.title, 1020).length;
-    ctx.font = '32px sans-serif'; const bodyLines = lines(ctx, story.body, 1020).length;
-    ctx.font = '25px sans-serif'; const factLines = lines(ctx, p.fact, 1020).length;
-    const photoAspect = photo.naturalHeight / photo.naturalWidth;
-    const drawW = 1100;
-    const drawH = Math.round(1100 * photoAspect);
-    canvas.height = 372 + drawH + titleLines * 76 + bodyLines * 52 + factLines * 40 + 20;
-    ctx.fillStyle = '#fffcf4'; ctx.fillRect(0,0,1200,canvas.height);
-    ctx.drawImage(photo, 0, 0, photo.naturalWidth, photo.naturalHeight, 50, 50, drawW, drawH);
-    const contentStartY = 50 + drawH + 38;
-    ctx.textBaseline = 'top'; ctx.fillStyle = '#7c8575'; ctx.font = '25px sans-serif'; ctx.fillText(p.name,90,contentStartY); ctx.textAlign = 'right'; ctx.fillText(date,1110,contentStartY); ctx.textAlign = 'left';
-    ctx.fillStyle = '#263d36'; ctx.font = '54px serif'; let y = textBlock(ctx,story.title,90,contentStartY + 64,1020,76)+12;
-    ctx.fillStyle = '#677164'; ctx.font = '32px sans-serif'; y = textBlock(ctx,story.body,90,y,1020,52)+30;
-    ctx.fillStyle = '#dfdfd0'; ctx.fillRect(90,y,1020,2); y += 28;
-    ctx.fillStyle = '#a0684d'; ctx.font = '24px sans-serif'; ctx.fillText('城脉小记',90,y); y += 42;
-    ctx.fillStyle = '#7c8575'; ctx.font = '25px sans-serif'; y = textBlock(ctx,p.fact,90,y,1020,40)+12;
-    const pureStyleLabels = {anime:'动漫风格图',watercolor:'水彩风格图',travel:'虚拟旅拍图'};
-    const styleLabel = pureStyleLabels[activePhotoStyle] || '';
-    if (styleLabel) ctx.fillText(styleLabel,90,canvas.height-88);
-    ctx.fillText('城脉相机 · CITY MEMORIES',90,canvas.height-55);
+    const canvas = renderPaper(snapshot);
     const blob = await new Promise(resolve => canvas.toBlob(resolve,'image/png')); if (!blob) throw Error('相纸导出失败，请重试。');
-    if (exportUrl) URL.revokeObjectURL(exportUrl); exportUrl = URL.createObjectURL(blob); $('export-image').src = exportUrl; $('download').href = exportUrl; $('download').download = `城脉相机-${p.name}-${date}.png`; $('export-dialog').showModal(); status('PNG 已生成，请下载或长按预览图片保存。');
-  } catch (err) { status(err.message || '无法导出，请重试。',true); } finally { buttons(); }
+    if (exportUrl) URL.revokeObjectURL(exportUrl); exportUrl = URL.createObjectURL(blob); $('export-image').src = exportUrl; $('download').href = exportUrl; $('download').download = `城脉相机-${snapshot.format === 'passport' ? '记忆护照-' : ''}${paperThemes[snapshot.theme].name}-${p.name}-${date}.png`; $('export-dialog').showModal(); status('PNG 已生成，请下载或长按预览图片保存。');
+  } catch (err) { status(err.message || '无法导出，请重试。',true); } finally { exporting = false; buttons(); }
 });
 $('close-dialog').addEventListener('click', () => $('export-dialog').close());
 function groupedOptions(items, valueOf, labelOf) {
@@ -201,6 +269,7 @@ try {
   places = await placeRes.json();
   const health = await healthRes.json();
   imageAvailable = !!health.imageConfigured;
+  imageQueueWaitSeconds = health.service?.imageQueueWaitSeconds || 50;
   travelModels = health.travel?.models || [{id:'gemini',label:'Gemini 3.1 · 快速',available:imageAvailable,timeoutSeconds:150}];
   $('travel-engine').replaceChildren(...travelModels.map(m=>{const o=new Option(m.label+(m.available?'':' · 未配置'),m.id);o.disabled=!m.available;return o;}));
   $('travel-engine').value=health.travel?.defaultEngine || 'gemini';
@@ -233,7 +302,7 @@ function stopCamera() {
   $('take-photo').disabled = true;
 }
 $('open-camera').addEventListener('click', async () => {
-  if (busy || imageBusy || photoLoading) return;
+  if (busy || imageBusy || exporting || photoLoading) return;
   stopCamera(); const version = cameraVersion;
   $('camera-status').textContent = '请允许使用相机，画面仅在本机处理。';
   $('camera-dialog').showModal();
@@ -296,6 +365,7 @@ function applyPhotoStyle(style) {
   $('photo').src = photo.src;
   $('image-mode').hidden = style === 'original';
   $('image-mode').textContent = imageTypeLabel(style, activeTravelSettings?.engine);
+  updateMemoryPreview();
   return true;
 }
 for (const input of document.querySelectorAll('input[name=photo-style]')) input.addEventListener('change', () => {
@@ -320,25 +390,28 @@ $('stylize').addEventListener('click',async()=>{
   const isTravel = style === 'travel';
   const settings = isTravel ? {engine:$('travel-engine').value,framing:$('travel-framing').value} : {engine:$('style-engine')?.value || 'gemini'};
   const selectedModel=travelModels.find(m=>m.id===settings?.engine);
-  if (busy || imageBusy || !originalPhoto || style==='original' || !$('image-consent').checked || !selectedModel?.available) return;
+  if (busy || imageBusy || exporting || !originalPhoto || style==='original' || !$('image-consent').checked || !selectedModel?.available) return;
   if (isTravel && !travelScenes.some(s=>s.placeId===$('place').value)) {imageStatus('当前景点暂无已授权实景参考图，请主动选择其他旅拍景点，或使用原片。',true); return;}
-  const version=uploadVersion,variantKey=isTravel?travelVariantKey():styleVariantKey(style);
+  const version=uploadVersion, requestVersion=inputVersion, variantKey=isTravel?travelVariantKey():styleVariantKey(style);
+  const requestPlace = $('place').value, requestScene = currentSceneImage();
   imageBusy=true;buttons();$('cancel-stylize').hidden=false;
   imageController=new AbortController();const controller=imageController;
   const waitSeconds=selectedModel.timeoutSeconds || (settings.engine === 'gemini' ? 150 : 240);
-  const timer=setTimeout(()=>controller.abort('timeout'),(waitSeconds+10)*1000);
-  imageStatus('正在生成'+(isTravel?travelModelName(settings.engine)+' · '+travelFramingName(settings.framing):photoStyleNames[style]+' · '+travelModelName(settings.engine))+'图片，最长等待约 '+Math.ceil(waitSeconds/60)+' 分钟，原片与已有结果已保留…');
+  const timer=setTimeout(()=>controller.abort('timeout'),(waitSeconds+imageQueueWaitSeconds+10)*1000);
+  imageStatus('正在生成'+(isTravel?travelModelName(settings.engine)+' · '+travelFramingName(settings.framing):photoStyleNames[style]+' · '+travelModelName(settings.engine))+'图片，最长等待约 '+Math.ceil(waitSeconds/60)+' 分钟；多人体验时自动排队（最多 '+imageQueueWaitSeconds+' 秒），原片与已有结果已保留…');
   try {
     // Resizing and re-encoding strips metadata before the opted-in upload.
     const canvas=document.createElement('canvas');
     const ratio=Math.min(1,1280/Math.max(originalPhoto.naturalWidth,originalPhoto.naturalHeight));
     canvas.width=Math.round(originalPhoto.naturalWidth*ratio);canvas.height=Math.round(originalPhoto.naturalHeight*ratio);
     canvas.getContext('2d').drawImage(originalPhoto,0,0,canvas.width,canvas.height);
-    const res=await fetch(isTravel?'/api/travel':'/api/stylize',{method:'POST',headers:{'Content-Type':'application/json'},signal:controller.signal,body:JSON.stringify({image:canvas.toDataURL('image/jpeg',.85),style,engine:settings.engine,placeId:$('place').value,consent:true,sceneImage:currentSceneImage(),...(settings || {})})});
+    const res=await fetch(isTravel?'/api/travel':'/api/stylize',{method:'POST',headers:{'Content-Type':'application/json'},signal:controller.signal,body:JSON.stringify({image:canvas.toDataURL('image/jpeg',.85),style,engine:settings.engine,placeId:requestPlace,consent:true,sceneImage:requestScene,...(settings || {})})});
     const data=await res.json();if(!res.ok)throw Error(data.error || '风格化失败，请重试。');
     const result=new Image();result.src=data.image;await result.decode();
     if (controller.signal.aborted) throw new DOMException('Canceled','AbortError');
-    if (version!==uploadVersion) return;
+    if (version!==uploadVersion || requestVersion!==inputVersion || requestPlace!==$('place').value || style!==document.querySelector('input[name=photo-style]:checked').value || variantKey!==(isTravel?travelVariantKey():styleVariantKey(style)) || (isTravel && requestScene!==currentSceneImage())) {
+      imageStatus('输入已改变，已丢弃旧图片，请按当前设置重新生成。'); return;
+    }
     if(isTravel) {
       travelVariants.delete(variantKey);
       travelVariants.set(variantKey,{photo:result,scene:data.scene,settings:{engine:data.engine || settings.engine,framing:data.framing || settings.framing}});
@@ -363,36 +436,6 @@ function imageTypeLabel(style) {
   return '';
 }
 function travelAttribution(scene) {return scene ? `景点参考：${scene.title}` : '';}
-
-function openAppWithFallback(appScheme, webUrl) {
-  const isMobile = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
-  if (!isMobile) {
-    window.open(webUrl, '_blank', 'noopener,noreferrer');
-    return;
-  }
-  let appLaunched = false;
-  let timer = null;
-  const cancelFallback = () => {
-    appLaunched = true;
-    if (timer) { clearTimeout(timer); timer = null; }
-    window.removeEventListener('pagehide', cancelFallback);
-    window.removeEventListener('blur', cancelFallback);
-    document.removeEventListener('visibilitychange', onVisChange);
-  };
-  const onVisChange = () => {
-    if (document.hidden || document.visibilityState === 'hidden') cancelFallback();
-  };
-  window.addEventListener('pagehide', cancelFallback, { once: true });
-  window.addEventListener('blur', cancelFallback, { once: true });
-  document.addEventListener('visibilitychange', onVisChange);
-  window.location.href = appScheme;
-  timer = setTimeout(() => {
-    cancelFallback();
-    if (!appLaunched && !document.hidden && document.visibilityState === 'visible') {
-      window.location.href = webUrl;
-    }
-  }, 2800);
-}
 
 function bindExploreAction(id, query, appType) {
   const el = $(id);
@@ -442,6 +485,7 @@ function updateExploreLinks(place) {
   bindExploreAction('scene-explore-amap', amapTarget, 'amap');
 }
 function setSceneImageIndex(idx) {
+  if (busy || imageBusy || exporting) return;
   const scene = travelScenes.find(s=>s.placeId===$('place').value);
   if (!scene) return;
   const list = getActiveSceneImages(scene);
@@ -519,7 +563,7 @@ $('scene-next')?.addEventListener('click', () => setSceneImageIndex(currentScene
 
 const isMobileDevice = () => ('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
 const handlePickPhoto = () => {
-  if (busy || imageBusy || photoLoading) return;
+  if (busy || imageBusy || exporting || photoLoading) return;
   if (isMobileDevice() || !canUseCamera) {
     $('album').click();
   } else {
