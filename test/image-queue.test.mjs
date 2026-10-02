@@ -1,7 +1,45 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {createServer} from '../server.mjs';
-const image = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jR1sAAAAASUVORK5CYII=';
+const image = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC0lEQVR42mP8/x8AAwMCAO+jR1sAAAAASUVORK5CYII=';
+test('default image budget allows 100 calls and rejects the 101st; environment override is honored', async () => {
+  const keys = ['IMAGE_BASE_URL', 'IMAGE_API_KEY', 'IMAGE_MODEL', 'IMAGE_MAX_CALLS_PER_HOUR'];
+  const old = keys.map(k => process.env[k]), realFetch = globalThis.fetch;
+  try {
+    process.env.IMAGE_BASE_URL = 'https://mock-image.invalid/v1';
+    process.env.IMAGE_API_KEY = 'mock';process.env.IMAGE_MODEL = 'mock';
+    for (const [limit, expected] of [[undefined, 100], ['100', 100], ['2', 2]]) {
+      if (limit === undefined) delete process.env.IMAGE_MAX_CALLS_PER_HOUR;
+      else process.env.IMAGE_MAX_CALLS_PER_HOUR = limit;
+      let calls = 0;
+      globalThis.fetch = async url => {
+        assert.ok(String(url).startsWith('https://mock-image.invalid/'));
+        calls++;
+        return Response.json({choices: [{message: {images: [{image_url: {url: image}}]}}]});
+      };
+      const server = createServer({imageGate: {cooldownMs: 0}});
+      await new Promise(r => server.listen(0, '127.0.0.1', r));
+      try {
+        const base = `http://127.0.0.1:${server.address().port}`;
+        const post = () => realFetch(base + '/api/stylize', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({image, consent: true, style: 'anime'})});
+        for (let i = 0; i < expected; i++) {
+          const response = await post();
+          assert.equal(response.status, 200, `call ${i + 1} with limit ${limit}`);
+          await response.json();
+        }
+        const rejected = await post();
+        assert.equal(rejected.status, 429);
+        assert.match((await rejected.json()).error, /额度/);
+        assert.equal(calls, expected, 'over-budget calls must not reach provider');
+      } finally {
+        server.closeAllConnections();await new Promise(r => server.close(r));
+      }
+    }
+  } finally {
+    globalThis.fetch = realFetch;
+    keys.forEach((k, i) => old[i] === undefined ? delete process.env[k] : process.env[k] = old[i]);
+  }
+});
 test('HTTP image requests queue across sessions; disconnect removes queued photo without starting a model', async () => {
   const keys = ['IMAGE_BASE_URL', 'IMAGE_API_KEY', 'IMAGE_MODEL'];const old = keys.map(k => process.env[k]);const realFetch = globalThis.fetch;
   const server = createServer({imageGate: {concurrency: 1, cooldownMs: 0}});await new Promise(r => server.listen(0, '127.0.0.1', r));
