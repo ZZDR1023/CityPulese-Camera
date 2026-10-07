@@ -25,7 +25,7 @@ export function buildPassport(place, places, {mood = '', kind = 'memory'} = {}) 
     stamp: kind === 'wish' ? '向往印章' : '记忆印章',
     boundary: kind === 'wish' ? '虚拟旅拍 · 不代表真实到访' : '用户记录',
     mood: mood.trim() || '把这一刻收藏，给下一次探索留一点期待。',
-    discovery: place.verified ? place.fact : '自定义地点仅记录个人心情，暂无已核验的文化发现。',
+    discovery: place.verified ? place.fact : (place.id === 'custom' ? `记录于荆州「${place.name}」的街区印记与城市漫游足迹。（暂无已核验官方史料）` : '自定义地点仅记录个人心情，暂无已核验的文化发现。'),
     next: next ? {id: next.id, name: next.name, reason: pair[1]} : null
   };
 }

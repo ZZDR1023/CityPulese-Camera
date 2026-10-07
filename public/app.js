@@ -80,7 +80,7 @@ function updatePlace() {
   updateScenePreview(); updateExploreLinks(p); $('paper-place').textContent = p.name; $('culture-fact').textContent = p.fact;
   $('place-notice').hidden = !p.notice; $('place-notice').textContent = p.notice || '';
   $('culture-notice').hidden = !p.notice; $('culture-notice').textContent = p.notice || '';
-  $('place-availability').textContent = travelScenes.some(s=>s.placeId===p.id) ? '已支持实景虚拟旅拍，也可用原片／动漫／水彩制作相纸。' : (isCustom ? '已启用自定义打卡地，AI 将为你量身定制专属纪念文案。' : '文化卡已接入；暂无可确认授权的旅拍背景，原片／动漫／水彩和文案可正常使用。');
+  $('place-availability').textContent = travelScenes.some(s=>s.placeId===p.id) ? '已支持实景虚拟旅拍，也可用原片／动漫／水彩制作相纸。' : (isCustom ? '已启用自定义打卡地，AI 将结合荆州当地风貌为你量身创作专属纪念文案。' : '文化卡已接入；暂无可确认授权的旅拍背景，原片／动漫／水彩和文案可正常使用。');
   if ($('source')) $('source').hidden = true;
   resetStory();
 }
@@ -184,7 +184,8 @@ function updateMemoryPreview() {
   const culture = $('culture-card');
   if (isPassport) $('passport-details').insertBefore(culture, $('next-stop'));
   else $('travel-credit').before(culture);
-  $('culture-heading').textContent = isPassport ? '这一站的文化发现' : '城脉小记';
+  const isCustomPlace = currentPlace()?.id === 'custom';
+  $('culture-heading').textContent = isPassport ? (isCustomPlace ? '这一站的街区印记' : '这一站的文化发现') : (isCustomPlace ? '街区印记' : '城脉小记');
   $('save').textContent = isPassport ? '↓ 保存记忆护照' : '↓ 保存相纸';
   if (!busy) $('generate').firstElementChild.textContent = isPassport ? '生成我的记忆护照' : '生成我的纪念相纸';
   $('export-title').textContent = isPassport ? '你的城市记忆护照已出片' : '你的相纸已出片';
