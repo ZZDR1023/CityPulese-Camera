@@ -722,15 +722,6 @@ if (uploadBoxEl) {
   });
 }
 
-// Direct camera button
-$('direct-camera-btn')?.addEventListener('click', () => {
-  if (busy || imageBusy || exporting || photoLoading) return;
-  if (canUseCamera) {
-    $('open-camera').click();
-  } else {
-    $('album').click();
-  }
-});
 
 // Mood inspiration chips
 document.querySelectorAll('.mood-chip').forEach(chip => {
