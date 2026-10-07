@@ -17,15 +17,16 @@ const nextStops = {
   'yingcheng-culture-park': ['jingzhou-garden-expo', '继续看看园林如何表达荆楚文化。'],
   'jingzhou-fantawild': ['jingzhou-museum', '把对文化故事的兴趣，延伸到真实器物。']
 };
-export function buildPassport(place, places, {mood = '', kind = 'memory'} = {}) {
-  const pair = nextStops[place.id] || ['jingzhou-wall', '从荆州古城地标开始，继续认识这座城市。'];
+export function buildPassport(place, places, {mood = '', kind = 'memory', discovery = ''} = {}) {
+  const pair = nextStops[place.id] || ['jingzhou-wall', '继续探索更多城市的独特印记与故事。'];
   const next = places.find(p => p.id === pair[0] && p.id !== place.id);
+  const customDiscovery = discovery || (place.id === 'custom' && place.fact ? place.fact : null);
   return {
     kind,
     stamp: kind === 'wish' ? '向往印章' : '记忆印章',
     boundary: kind === 'wish' ? '虚拟旅拍 · 不代表真实到访' : '用户记录',
     mood: mood.trim() || '把这一刻收藏，给下一次探索留一点期待。',
-    discovery: place.verified ? place.fact : (place.id === 'custom' ? `记录于荆州「${place.name}」的街区印记与城市漫游足迹。（暂无已核验官方史料）` : '自定义地点仅记录个人心情，暂无已核验的文化发现。'),
+    discovery: customDiscovery || (place.verified ? place.fact : '自定义打卡地点，暂无已核验的预设词条。'),
     next: next ? {id: next.id, name: next.name, reason: pair[1]} : null
   };
 }

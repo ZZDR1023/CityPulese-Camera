@@ -33,13 +33,13 @@ const date = new Date().toLocaleDateString('zh-CN', {year:'numeric',month:'2-dig
 $('paper-date').textContent = date;
 const currentPlace = () => {
   if ($('place').value === 'custom') {
-    const customName = ($('custom-place-input')?.value || '').trim() || '荆州';
+    const customName = ($('custom-place-input')?.value || '').trim() || '旅行打卡地';
     return {
       id: 'custom',
       name: customName,
       category: '自定义地点',
-      fact: `记录于荆州「${customName}」的专属足迹与美好瞬间。`,
-      verified: false,
+      fact: story?.discovery || `记录于「${customName}」的专属足迹与美好瞬间。`,
+      verified: true,
       notice: '自定义打卡地点'
     };
   }
@@ -131,7 +131,9 @@ function displayStory(result) {
   story = result;
   $('story-title').textContent = result.title;
   $('story-body').textContent = result.body;
-  if ($('mode')) $('mode').textContent = '';
+  if (result.discovery) {
+    $('culture-fact').textContent = result.discovery;
+  }
   $('paper').classList.remove('fresh');
   void $('paper').offsetWidth;
   $('paper').classList.add('fresh');
@@ -164,11 +166,11 @@ $('generate').addEventListener('click', async () => {
 });
 function storyInput() {
   const custom = $('place').value === 'custom';
-  return {placeId: $('place').value, customPlace: custom ? ($('custom-place-input').value.trim() || '荆州') : undefined, mood: $('mood').value, style: document.querySelector('input[name=style]:checked').value, photoMode: activePhotoStyle === 'travel' ? 'travel' : 'photo', uploadVersion};
+  return {placeId: $('place').value, customPlace: custom ? ($('custom-place-input').value.trim() || '旅行打卡地') : undefined, mood: $('mood').value, style: document.querySelector('input[name=style]:checked').value, photoMode: activePhotoStyle === 'travel' ? 'travel' : 'photo', uploadVersion};
 }
 function currentPassport() {
   const place = currentPlace();
-  return place ? buildPassport(place, places, {mood: $('mood').value, kind: activePhotoStyle === 'travel' ? 'wish' : 'memory'}) : null;
+  return place ? buildPassport(place, places, {mood: $('mood').value, kind: activePhotoStyle === 'travel' ? 'wish' : 'memory', discovery: story?.discovery}) : null;
 }
 function updateMemoryPreview() {
   const passport = currentPassport();
@@ -185,13 +187,13 @@ function updateMemoryPreview() {
   if (isPassport) $('passport-details').insertBefore(culture, $('next-stop'));
   else $('travel-credit').before(culture);
   const isCustomPlace = currentPlace()?.id === 'custom';
-  $('culture-heading').textContent = isPassport ? (isCustomPlace ? '这一站的街区印记' : '这一站的文化发现') : (isCustomPlace ? '街区印记' : '城脉小记');
+  $('culture-heading').textContent = isPassport ? (isCustomPlace ? '这一站的文化小记' : '这一站的文化发现') : (isCustomPlace ? '街区印记' : '城脉小记');
   $('save').textContent = isPassport ? '↓ 保存记忆护照' : '↓ 保存相纸';
   if (!busy) $('generate').firstElementChild.textContent = isPassport ? '生成我的记忆护照' : '生成我的纪念相纸';
   $('export-title').textContent = isPassport ? '你的城市记忆护照已出片' : '你的相纸已出片';
   if (!passport) return;
-  if (isPassport) $('culture-fact').textContent = passport.discovery;
-  else $('culture-fact').textContent = currentPlace().fact;
+  if (isPassport) $('culture-fact').textContent = story?.discovery || passport.discovery;
+  else $('culture-fact').textContent = story?.discovery || currentPlace().fact;
   $('stamp-word').textContent = passport.kind === 'wish' ? '向往' : '记忆';
   $('memory-stamp').dataset.kind = passport.kind;
   $('memory-stamp-art').innerHTML = stampMarkup(passport.kind, currentPlace(), paperTheme === 'chuyun' ? '#dcb96f' : '#a0684d');
@@ -478,19 +480,20 @@ function bindExploreAction(id, query, appType) {
   };
 }
 
-function getAmapTarget(name) {
-  if (!name) return '荆州';
+function getAmapTarget(name, isCustom = false) {
+  if (!name) return '旅行目的地';
   const parts = name.split(/[·'’\-\/]/).map(s => s.trim()).filter(Boolean);
   let target = parts.length > 1 ? parts[1] : parts[0];
-  if (!target.includes('荆州')) target = '荆州 ' + target;
+  if (!isCustom && !target.includes('荆州')) target = '荆州 ' + target;
   return target;
 }
 
 function updateExploreLinks(place) {
   if (!place) return;
+  const isCustom = place.id === 'custom';
   const parts = place.name.split(/[·'’\-\/]/).map(s => s.trim()).filter(Boolean);
   const cleanTarget = parts.length > 1 ? parts[1] : parts[0];
-  const searchPlace = place.id === 'custom' ? cleanTarget : `荆州 ${cleanTarget}`;
+  const searchPlace = isCustom ? cleanTarget : `荆州 ${cleanTarget}`;
   const xhsQuery = `${searchPlace} 打卡攻略`;
   const douyinQuery = `${searchPlace} 游玩`;
   bindExploreAction('place-explore-xhs', xhsQuery, 'xhs');
@@ -498,12 +501,11 @@ function updateExploreLinks(place) {
   bindExploreAction('scene-explore-xhs', xhsQuery, 'xhs');
   bindExploreAction('scene-explore-douyin', douyinQuery, 'douyin');
   
-  // 无论原片、动漫、水彩还是虚拟旅拍，均提供高德地图导航
-  const placeAmapTarget = getAmapTarget(place.name);
+  const placeAmapTarget = getAmapTarget(place.name, isCustom);
   bindExploreAction('place-explore-amap', placeAmapTarget, 'amap');
 
   const scene = travelScenes.find(s => s.placeId === place.id);
-  const sceneAmapTarget = getAmapTarget(scene?.title || place.name);
+  const sceneAmapTarget = getAmapTarget(scene?.title || place.name, isCustom);
   bindExploreAction('scene-explore-amap', sceneAmapTarget, 'amap');
 }
 function setSceneImageIndex(idx) {

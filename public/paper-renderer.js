@@ -51,8 +51,8 @@ export function renderPaper({photo, place, story, date, photoStyle, theme = 'cla
     y = Math.max(y, stampY + 252);
     block('此刻的心情', {font: '24px sans-serif', lineHeight: 36, color: palette.accent, after: 6});
     block(passport.mood, {font: '28px sans-serif', lineHeight: 46, after: 26});
-    block('这一站的文化发现', {font: '24px sans-serif', lineHeight: 36, color: palette.accent, after: 6});
-    block(passport.discovery, {font: '28px sans-serif', lineHeight: 46, after: 26});
+    block(place.id === 'custom' ? '这一站的文化小记' : '这一站的文化发现', {font: '24px sans-serif', lineHeight: 36, color: palette.accent, after: 6});
+    block(story?.discovery || passport.discovery, {font: '28px sans-serif', lineHeight: 46, after: 26});
     if (passport.next) {
       rule();
       block('下一站 · ' + passport.next.name, {font: '32px serif', lineHeight: 48, color: palette.ink, after: 10});
@@ -60,8 +60,8 @@ export function renderPaper({photo, place, story, date, photoStyle, theme = 'cla
       block('探索建议，非实时路线；出行前请确认开放与交通。', {font: '23px sans-serif', lineHeight: 36, after: 22});
     }
   } else {
-    block('城脉小记', {font: '24px sans-serif', lineHeight: 36, color: palette.accent, after: 6});
-    block(place.fact, {font: '25px sans-serif', lineHeight: 40, after: 20});
+    block(place.id === 'custom' ? '街区印记' : '城脉小记', {font: '24px sans-serif', lineHeight: 36, color: palette.accent, after: 6});
+    block(story?.discovery || place.fact, {font: '25px sans-serif', lineHeight: 40, after: 20});
   }
   const styleLabel = {anime: '动漫风格图', watercolor: '水彩风格图', film: '胶片记忆图', gongbi: '国风工笔图', travel: '虚拟旅拍图'}[photoStyle];
   if (styleLabel) block(styleLabel, {font: '23px sans-serif', lineHeight: 34, after: 10});
