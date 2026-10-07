@@ -143,6 +143,12 @@
 .travel-toggle-btn{display:inline-flex;align-items:center;gap:6px;padding:9px 15px;border-radius:20px;font-size:12px;font-weight:600;background:#e2e9d9;color:var(--green);border:1.5px solid #b8c7ab;box-shadow:0 2px 8px rgba(37,77,60,0.08);transition:all .2s ease;cursor:pointer;user-select:none}
 .travel-toggle-label input:checked + .travel-toggle-btn{background:var(--green);color:#f3efe5;border-color:#18281f;box-shadow:0 4px 14px rgba(24,40,31,0.22)}
 .travel-sparkle-icon{font-style:normal;font-size:14px}
+
+.date-header-row{display:flex;align-items:center;justify-content:space-between;margin:14px 0 8px}
+.date-picker-input{width:100%;background:#faf8f1;border:1px solid var(--line);border-radius:5px;padding:11px 14px;color:var(--ink);font-size:12px;cursor:pointer;outline:none;margin-bottom:14px;transition:border-color .15s}
+.date-picker-input:hover,.date-picker-input:focus{border-color:#a8b99e}
+#paper-date{cursor:pointer;border-bottom:1px dashed #b4c4ab;padding-bottom:1px;transition:color .15s}
+#paper-date:hover{color:var(--orange)}
 .ai-action-card{border:1px solid var(--line);border-radius:7px;padding:16px 18px;margin:-8px 0 20px;background:#faf8f180}
 .ai-action-card .image-notice{margin-top:0}
 .ai-action-card .consent{margin:10px 0 14px}

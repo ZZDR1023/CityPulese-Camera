@@ -29,8 +29,54 @@ const travelModelName = engine => {
 };
 const travelFramingName = framing => framing==='scenic'?'风景为主':'自然合影';
 const photoStyleNames = {original:'原片',film:'复古胶片',anime:'动漫',watercolor:'水彩',gongbi:'国风工笔',travel:'虚拟旅拍'};
-const date = new Date().toLocaleDateString('zh-CN', {year:'numeric',month:'2-digit',day:'2-digit'}).replaceAll('/', '.');
+const formatToDotDate = d => {
+  const yr = d.getFullYear();
+  const mo = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${yr}.${mo}.${day}`;
+};
+const formatToIso = d => {
+  const yr = d.getFullYear();
+  const mo = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${yr}-${mo}-${day}`;
+};
+const initialToday = new Date();
+const todayDot = formatToDotDate(initialToday);
+const todayIso = formatToIso(initialToday);
+let date = todayDot;
 $('paper-date').textContent = date;
+$('paper-date').title = '点击修改相纸日期';
+const dateInput = $('travel-date-input');
+if (dateInput) {
+  dateInput.value = todayIso;
+  dateInput.addEventListener('change', () => {
+    if (dateInput.value) {
+      const parts = dateInput.value.split('-');
+      if (parts.length === 3) {
+        date = `${parts[0]}.${parts[1]}.${parts[2]}`;
+        $('paper-date').textContent = date;
+        if ($('reset-today-btn')) $('reset-today-btn').hidden = (dateInput.value === todayIso);
+      }
+    }
+  });
+}
+$('reset-today-btn')?.addEventListener('click', () => {
+  if (busy || imageBusy || exporting) return;
+  date = todayDot;
+  if (dateInput) dateInput.value = todayIso;
+  $('paper-date').textContent = date;
+  if ($('reset-today-btn')) $('reset-today-btn').hidden = true;
+});
+$('paper-date')?.addEventListener('click', () => {
+  if (dateInput) {
+    if (typeof dateInput.showPicker === 'function') {
+      try { dateInput.showPicker(); } catch { dateInput.focus(); }
+    } else {
+      dateInput.focus();
+    }
+  }
+});
 const currentPlace = () => {
   if ($('place').value === 'custom') {
     const customName = ($('custom-place-input')?.value || '').trim() || '旅行打卡地';
