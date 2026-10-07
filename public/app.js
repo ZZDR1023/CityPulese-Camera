@@ -372,7 +372,11 @@ function applyPhotoStyle(style) {
   $('photo').src = photo.src;
   $('image-mode').hidden = style === 'original';
   $('image-mode').textContent = imageTypeLabel(style, activeTravelSettings?.engine);
-  if ($('compare-original-btn')) $('compare-original-btn').hidden = style === 'original' || !originalPhoto;
+  if ($('compare-original-btn')) {
+    $('compare-original-btn').hidden = style === 'original' || !originalPhoto;
+    $('compare-original-btn').classList.remove('active');
+    if ($('compare-original-btn').firstElementChild) $('compare-original-btn').firstElementChild.textContent = '👁️ 对比原片';
+  }
   if ($('compare-badge')) $('compare-badge').hidden = true;
   updateMemoryPreview();
   return true;
@@ -645,30 +649,58 @@ if (musicBtn && bgAudio) {
   });
 }
 
-// Additional UX enhancements: Compare Original Photo
+// Additional UX enhancements: Compare Original Photo (supports both press-and-hold & tap-to-toggle)
 const compareBtn = $('compare-original-btn');
 const compareBadge = $('compare-badge');
 if (compareBtn) {
-  const showOriginal = (e) => {
-    e?.preventDefault();
-    if (originalPhoto && activePhotoStyle !== 'original') {
-      $('photo').src = originalPhoto.src;
-      if (compareBadge) compareBadge.hidden = false;
-      compareBtn.classList.add('active');
-    }
+  let isToggledOriginal = false;
+  let pointerDownTime = 0;
+
+  const showOriginalView = () => {
+    if (!originalPhoto || activePhotoStyle === 'original') return;
+    $('photo').src = originalPhoto.src;
+    if (compareBadge) compareBadge.hidden = false;
+    compareBtn.classList.add('active');
+    if (compareBtn.firstElementChild) compareBtn.firstElementChild.textContent = '👁️ 恢复风格图';
   };
-  const restoreStyle = (e) => {
-    e?.preventDefault();
-    if (photo) {
-      $('photo').src = photo.src;
-      if (compareBadge) compareBadge.hidden = true;
-      compareBtn.classList.remove('active');
-    }
+
+  const restoreStyleView = () => {
+    if (!photo) return;
+    $('photo').src = photo.src;
+    if (compareBadge) compareBadge.hidden = true;
+    compareBtn.classList.remove('active');
+    if (compareBtn.firstElementChild) compareBtn.firstElementChild.textContent = '👁️ 对比原片';
+    isToggledOriginal = false;
   };
-  compareBtn.addEventListener('pointerdown', showOriginal);
-  compareBtn.addEventListener('pointerup', restoreStyle);
-  compareBtn.addEventListener('pointerleave', restoreStyle);
-  compareBtn.addEventListener('pointercancel', restoreStyle);
+
+  compareBtn.addEventListener('pointerdown', (e) => {
+    e.preventDefault();
+    if (!originalPhoto || activePhotoStyle === 'original') return;
+    pointerDownTime = Date.now();
+    if (isToggledOriginal) {
+      restoreStyleView();
+    } else {
+      showOriginalView();
+    }
+  });
+
+  compareBtn.addEventListener('pointerup', (e) => {
+    e?.preventDefault();
+    if (!photo || activePhotoStyle === 'original') return;
+    const holdDuration = Date.now() - pointerDownTime;
+    if (holdDuration > 280) {
+      restoreStyleView();
+    } else {
+      if ($('photo').src === originalPhoto.src) {
+        isToggledOriginal = true;
+      }
+    }
+  });
+
+  compareBtn.addEventListener('pointercancel', () => {
+    if (Date.now() - pointerDownTime > 280) restoreStyleView();
+  });
+  compareBtn.addEventListener('contextmenu', (e) => e.preventDefault());
 }
 
 // Clear Photo handler
