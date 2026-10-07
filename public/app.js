@@ -260,7 +260,13 @@ $('save').addEventListener('click', async () => {
     await ensureDisplayFont();
     const canvas = renderPaper(snapshot);
     const blob = await new Promise(resolve => canvas.toBlob(resolve,'image/png')); if (!blob) throw Error('相纸导出失败，请重试。');
-    if (exportUrl) URL.revokeObjectURL(exportUrl); exportUrl = URL.createObjectURL(blob); $('export-image').src = exportUrl; $('download').href = exportUrl; $('download').download = `城脉相机-${snapshot.format === 'passport' ? '记忆护照-' : ''}${paperThemes[snapshot.theme].name}-${p.name}-${date}.png`; $('export-dialog').showModal(); status('PNG 已生成，请下载或长按预览图片保存。');
+    if (exportUrl) URL.revokeObjectURL(exportUrl); exportUrl = URL.createObjectURL(blob); $('export-image').src = exportUrl; $('download').href = exportUrl;
+    const now = new Date();
+    const timeSuffix = `${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}${String(now.getSeconds()).padStart(2, '0')}`;
+    const stylePart = activePhotoStyle !== 'original' ? `-${photoStyleNames[activePhotoStyle] || activePhotoStyle}` : '';
+    const cleanName = (p.name || '旅行').replace(/[\\/:*?"<>|]/g, '');
+    $('download').download = `城脉相机-${snapshot.format === 'passport' ? '记忆护照-' : ''}${cleanName}${stylePart}-${date}_${timeSuffix}.png`;
+    $('export-dialog').showModal(); status('PNG 已生成，请下载或长按预览图片保存。');
   } catch (err) { status(err.message || '无法导出，请重试。',true); } finally { exporting = false; buttons(); }
 });
 $('close-dialog').addEventListener('click', () => $('export-dialog').close());
