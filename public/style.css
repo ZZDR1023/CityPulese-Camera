@@ -92,3 +92,36 @@
 #app-link-toast-action{color:#dcb96f;font-weight:600;text-decoration:underline;white-space:nowrap}
 #app-link-toast-close{background:none;border:none;color:#9ca395;font-size:17px;cursor:pointer;padding:0 0 0 4px;line-height:1}
 #app-link-toast-close:hover{color:#fff}
+
+/* Enhancements: Drag & Drop, Compare Original, Inspiration Chips & Audio Waves */
+.upload-box.drag-over{border-color:var(--green);background:#e6ede0;transform:scale(1.01);box-shadow:0 6px 20px rgba(37,77,60,0.18)}
+.upload-preview-actions{display:flex;align-items:center;gap:8px;margin-top:6px}
+.inline-clear-btn{font-size:11px;color:var(--muted);padding:4px 8px;cursor:pointer;text-decoration:underline}
+.inline-clear-btn:hover{color:#ba603f}
+
+.styles.style-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(84px,1fr));gap:8px}
+.style-card{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px 4px;border-radius:6px;gap:2px;text-align:center;line-height:1.2;transition:all .2s ease;min-height:54px}
+.style-icon{font-style:normal;font-size:18px;margin-bottom:2px;display:block}
+.style-card strong{font-size:12px;font-weight:600}
+.style-card small{font-size:9px;color:var(--muted);transform:scale(0.92);display:block}
+.styles label input:checked + .style-card{background:#18281f;color:#f3efe5;box-shadow:0 3px 10px rgba(24,40,31,0.22);border-color:#18281f}
+.styles label input:checked + .style-card small{color:#d5dacd}
+
+.mood-chips{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 10px}
+.mood-chip{background:#e8ece2;border:1px solid #c9d2c2;color:var(--green);font-size:11px;padding:5px 11px;border-radius:14px;cursor:pointer;transition:all .15s ease;display:inline-flex;align-items:center;gap:4px}
+.mood-chip:hover{background:#dbe4d3;border-color:#b4c4ab;transform:translateY(-1px)}
+.mood-chip:active{transform:translateY(0)}
+
+.compare-btn{position:absolute;top:12px;right:12px;z-index:10;background:rgba(23,37,30,0.85);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);color:#f3efe5;border:1.5px solid rgba(212,175,55,0.7);border-radius:18px;padding:6px 12px;font-size:11px;font-weight:500;display:inline-flex;align-items:center;gap:5px;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,0.28);transition:all .2s ease;user-select:none;-webkit-user-select:none}
+.compare-btn:hover{background:#18281f;transform:scale(1.04)}
+.compare-btn.active{background:#ba603f;border-color:#ba603f;transform:scale(0.96)}
+.compare-badge{position:absolute;top:12px;left:12px;z-index:10;background:rgba(186,96,63,0.92);backdrop-filter:blur(4px);color:#fff;font-size:10px;font-weight:600;letter-spacing:1px;padding:4px 10px;border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,0.25);pointer-events:none}
+
+.music-bars{display:inline-flex;align-items:flex-end;gap:2px;height:10px;margin-left:4px;vertical-align:middle}
+.music-bars i{width:2px;height:3px;background:var(--green);border-radius:1px;transition:height .15s}
+.music-bars.playing i:nth-child(1){animation:music-bar 0.8s ease-in-out infinite alternate}
+.music-bars.playing i:nth-child(2){animation:music-bar 0.8s ease-in-out 0.25s infinite alternate}
+.music-bars.playing i:nth-child(3){animation:music-bar 0.8s ease-in-out 0.5s infinite alternate}
+@keyframes music-bar{0%{height:2px}100%{height:10px}}
+
+.export-actions{display:flex;gap:10px;justify-content:center;margin-top:14px;flex-wrap:wrap}

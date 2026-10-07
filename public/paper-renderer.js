@@ -63,7 +63,7 @@ export function renderPaper({photo, place, story, date, photoStyle, theme = 'cla
     block('城脉小记', {font: '24px sans-serif', lineHeight: 36, color: palette.accent, after: 6});
     block(place.fact, {font: '25px sans-serif', lineHeight: 40, after: 20});
   }
-  const styleLabel = {anime: '动漫风格图', watercolor: '水彩风格图', travel: '虚拟旅拍图'}[photoStyle];
+  const styleLabel = {anime: '动漫风格图', watercolor: '水彩风格图', film: '胶片记忆图', gongbi: '国风工笔图', travel: '虚拟旅拍图'}[photoStyle];
   if (styleLabel) block(styleLabel, {font: '23px sans-serif', lineHeight: 34, after: 10});
   if (isChu) block('原创楚韵设计 · 非文物复原', {font: '21px sans-serif', lineHeight: 32, after: 10});
   rule();

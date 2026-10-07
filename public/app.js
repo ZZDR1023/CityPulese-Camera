@@ -28,7 +28,7 @@ const travelModelName = engine => {
   return engine;
 };
 const travelFramingName = framing => framing==='scenic'?'风景为主':'自然合影';
-const photoStyleNames = {original:'原片',anime:'动漫',watercolor:'水彩',travel:'虚拟旅拍'};
+const photoStyleNames = {original:'原片',film:'复古胶片',anime:'动漫',watercolor:'水彩',gongbi:'国风工笔',travel:'虚拟旅拍'};
 const date = new Date().toLocaleDateString('zh-CN', {year:'numeric',month:'2-digit',day:'2-digit'}).replaceAll('/', '.');
 $('paper-date').textContent = date;
 const currentPlace = () => {
@@ -370,6 +370,8 @@ function applyPhotoStyle(style) {
   $('photo').src = photo.src;
   $('image-mode').hidden = style === 'original';
   $('image-mode').textContent = imageTypeLabel(style, activeTravelSettings?.engine);
+  if ($('compare-original-btn')) $('compare-original-btn').hidden = style === 'original' || !originalPhoto;
+  if ($('compare-badge')) $('compare-badge').hidden = true;
   updateMemoryPreview();
   return true;
 }
@@ -377,7 +379,7 @@ for (const input of document.querySelectorAll('input[name=photo-style]')) input.
   const style=input.value;
   if (style==='travel' || activePhotoStyle==='travel') resetStory();
   const isTravel = style === 'travel';
-  const isStylize = style === 'anime' || style === 'watercolor';
+  const isStylize = style === 'anime' || style === 'watercolor' || style === 'film' || style === 'gongbi';
   $('stylize-options').hidden = style === 'original';
   $('travel-options').hidden = !isTravel;
   if ($('style-engine-box')) $('style-engine-box').hidden = !isStylize;
@@ -435,8 +437,10 @@ $('stylize').addEventListener('click',async()=>{
 });
 
 function imageTypeLabel(style) {
+  if (style === 'film') return '胶片风格图';
   if (style === 'anime') return '动漫风格图';
   if (style === 'watercolor') return '水彩风格图';
+  if (style === 'gongbi') return '工笔风格图';
   if (style === 'travel') return '虚拟旅拍图';
   return '';
 }
@@ -633,5 +637,142 @@ if (musicBtn && bgAudio) {
     musicPlayIcon.innerHTML = MUSIC_PLAY_SVG;
     musicPlayIcon.classList.remove('playing');
     musicBtn.setAttribute('aria-label', '播放音乐《荆州谣》');
+  });
+}
+
+// Additional UX enhancements: Compare Original Photo
+const compareBtn = $('compare-original-btn');
+const compareBadge = $('compare-badge');
+if (compareBtn) {
+  const showOriginal = (e) => {
+    e?.preventDefault();
+    if (originalPhoto && activePhotoStyle !== 'original') {
+      $('photo').src = originalPhoto.src;
+      if (compareBadge) compareBadge.hidden = false;
+      compareBtn.classList.add('active');
+    }
+  };
+  const restoreStyle = (e) => {
+    e?.preventDefault();
+    if (photo) {
+      $('photo').src = photo.src;
+      if (compareBadge) compareBadge.hidden = true;
+      compareBtn.classList.remove('active');
+    }
+  };
+  compareBtn.addEventListener('pointerdown', showOriginal);
+  compareBtn.addEventListener('pointerup', restoreStyle);
+  compareBtn.addEventListener('pointerleave', restoreStyle);
+  compareBtn.addEventListener('pointercancel', restoreStyle);
+}
+
+// Clear Photo handler
+$('clear-photo-btn')?.addEventListener('click', () => {
+  if (busy || imageBusy || exporting || photoLoading) return;
+  originalPhoto = null;
+  photo = null;
+  photoVariants = {};
+  travelVariants.clear();
+  activeTravelScene = null;
+  activeTravelSettings = null;
+  activePhotoStyle = 'original';
+  const origRadio = document.querySelector('input[name=photo-style][value=original]');
+  if (origRadio) origRadio.checked = true;
+  $('stylize-options').hidden = true;
+  $('travel-options').hidden = true;
+  if ($('upload-preview')) $('upload-preview').hidden = true;
+  if ($('upload-placeholder')) $('upload-placeholder').hidden = false;
+  $('photo').src = '/posters/poster_official.png';
+  if ($('compare-original-btn')) $('compare-original-btn').hidden = true;
+  if ($('compare-badge')) $('compare-badge').hidden = true;
+  $('image-mode').hidden = true;
+  resetStory();
+  buttons();
+  status('已清除照片，可重新选取旅行照片。');
+});
+
+// Drag and drop photo upload
+const uploadBoxEl = $('upload-box');
+if (uploadBoxEl) {
+  ['dragenter', 'dragover'].forEach(name => {
+    uploadBoxEl.addEventListener(name, e => {
+      e.preventDefault();
+      e.stopPropagation();
+      uploadBoxEl.classList.add('drag-over');
+    });
+  });
+  ['dragleave', 'drop'].forEach(name => {
+    uploadBoxEl.addEventListener(name, e => {
+      e.preventDefault();
+      e.stopPropagation();
+      uploadBoxEl.classList.remove('drag-over');
+    });
+  });
+  uploadBoxEl.addEventListener('drop', async e => {
+    if (busy || imageBusy || exporting || photoLoading) return;
+    const file = e.dataTransfer?.files?.[0];
+    if (file) await loadPhoto(file);
+  });
+}
+
+// Direct camera button
+$('direct-camera-btn')?.addEventListener('click', () => {
+  if (busy || imageBusy || exporting || photoLoading) return;
+  if (canUseCamera) {
+    $('open-camera').click();
+  } else {
+    $('album').click();
+  }
+});
+
+// Mood inspiration chips
+document.querySelectorAll('.mood-chip').forEach(chip => {
+  chip.addEventListener('click', () => {
+    if (busy || imageBusy || exporting) return;
+    const text = chip.dataset.mood;
+    if (text) {
+      $('mood').value = text;
+      $('counter').textContent = `${[...text].length} / 100`;
+      resetStory();
+      buttons();
+      status('已填入心情灵感，可直接使用或继续修改。');
+    }
+  });
+});
+
+// Copy image to clipboard
+$('copy-image-btn')?.addEventListener('click', async () => {
+  if (!exportUrl) return;
+  try {
+    const res = await fetch(exportUrl);
+    const blob = await res.blob();
+    if (navigator.clipboard && window.ClipboardItem) {
+      await navigator.clipboard.write([new ClipboardItem({'image/png': blob})]);
+      const btn = $('copy-image-btn');
+      if (btn) btn.textContent = '✓ 已复制到剪贴板';
+      setTimeout(() => {
+        if ($('copy-image-btn')) $('copy-image-btn').textContent = '📋 复制相纸图片';
+      }, 2500);
+      status('相纸图片已成功复制到剪贴板，可直接在微信/朋友圈/小红书粘贴！');
+    } else {
+      throw Error('当前浏览器环境不支持直接复制图片，请使用“下载 PNG 相纸”按钮保存。');
+    }
+  } catch (err) {
+    status(err.message || '复制失败，请使用下载按钮保存。', true);
+  }
+});
+
+// Synchronize music sound bars with audio playback
+if (musicBtn && bgAudio) {
+  const updateMusicBars = () => {
+    const bars = $('music-bars');
+    if (bars) bars.classList.toggle('playing', isMusicPlaying);
+  };
+  musicBtn.addEventListener('click', () => setTimeout(updateMusicBars, 50));
+  bgAudio.addEventListener('ended', updateMusicBars);
+  bgAudio.addEventListener('pause', updateMusicBars);
+  bgAudio.addEventListener('play', () => {
+    const bars = $('music-bars');
+    if (bars) bars.classList.add('playing');
   });
 }
