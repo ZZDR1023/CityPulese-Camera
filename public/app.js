@@ -101,7 +101,7 @@ async function loadPhoto(file) {
     const canvas = document.createElement('canvas'); canvas.width = Math.max(1, Math.round(img.naturalWidth * ratio)); canvas.height = Math.max(1, Math.round(img.naturalHeight * ratio)); canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
     const preview = canvas.toDataURL('image/jpeg', .92); const ready = new Image(); ready.src = preview; await ready.decode();
     if (version !== uploadVersion) return;
-    originalPhoto = ready; photoVariants = {}; travelVariants.clear(); activeTravelScene = null; activeTravelSettings=null; $('travel-result-info').hidden=true; if ($('travel-credit')) $('travel-credit').hidden = true; $('travel-options').hidden = true; activePhotoStyle = 'original'; $('image-consent').checked = false; document.querySelector('input[name=photo-style][value=original]').checked = true; $('stylize-options').hidden = true; $('image-mode').hidden = true; imageStatus('当前使用原片，不上传照片。'); photo = ready; updatePhotoAspect(ready); $('photo').src = preview; $('photo').hidden = false; if ($('empty-photo')) $('empty-photo').hidden = true; if ($('upload-placeholder')) $('upload-placeholder').hidden = true; if ($('upload-preview')) $('upload-preview').hidden = false; if ($('upload-thumb')) $('upload-thumb').src = preview; resetStory(); status('照片已就位，写下心情，开始出片。');
+    originalPhoto = ready; photoVariants = {}; travelVariants.clear(); activeTravelScene = null; activeTravelSettings=null; $('travel-result-info').hidden=true; if ($('travel-credit')) $('travel-credit').hidden = true; $('travel-options').hidden = true; if ($('travel-section')) $('travel-section').classList.remove('active'); if ($('travel-toggle-text')) $('travel-toggle-text').textContent = '开启实景旅拍'; activePhotoStyle = 'original'; $('image-consent').checked = false; document.querySelector('input[name=photo-style][value=original]').checked = true; $('stylize-options').hidden = true; $('image-mode').hidden = true; imageStatus('当前使用原片，不上传照片。'); photo = ready; updatePhotoAspect(ready); $('photo').src = preview; $('photo').hidden = false; if ($('empty-photo')) $('empty-photo').hidden = true; if ($('upload-placeholder')) $('upload-placeholder').hidden = true; if ($('upload-preview')) $('upload-preview').hidden = false; if ($('upload-thumb')) $('upload-thumb').src = preview; resetStory(); status('照片已就位，写下心情，开始出片。');
   } catch (err) { if (version === uploadVersion) status(err.message || '照片无法读取，请换一张 JPG 或 PNG。', true); }
   finally { if (url) URL.revokeObjectURL(url); if (version === uploadVersion) { photoLoading = false; buttons(); } }
 }
@@ -242,6 +242,8 @@ $('choose-next-stop').addEventListener('click', () => {
     applyPhotoStyle('original');
     document.querySelector('input[name=photo-style][value=original]').checked = true;
     $('travel-options').hidden = true; $('stylize-options').hidden = true;
+    if ($('travel-section')) $('travel-section').classList.remove('active');
+    if ($('travel-toggle-text')) $('travel-toggle-text').textContent = '开启实景旅拍';
   }
   $('place').value = next.id; updatePlace();
   status('已选择下一站，仅作探索与纪念；地点选择不代表到访。');
@@ -383,9 +385,12 @@ for (const input of document.querySelectorAll('input[name=photo-style]')) input.
   $('stylize-options').hidden = style === 'original';
   $('travel-options').hidden = !isTravel;
   if ($('style-engine-box')) $('style-engine-box').hidden = !isStylize;
+  if ($('travel-section')) $('travel-section').classList.toggle('active', isTravel);
+  if ($('travel-toggle-text')) $('travel-toggle-text').textContent = isTravel ? '✓ 实景旅拍中' : '开启实景旅拍';
+  if ($('exit-travel-btn')) $('exit-travel-btn').hidden = !isTravel;
   updateScenePreview();
-  if (applyPhotoStyle(style)) imageStatus(style==='original'?'已切回原片，不上传照片。':'正在使用已生成的'+photoStyleNames[style]+'风格图，可随时切回原片。');
-  else imageStatus(!originalPhoto?'请先选择照片。':(style==='travel'?!travelModels.some(m=>m.id===$('travel-engine').value && m.available):!travelModels.some(m=>m.id===($('style-engine')?.value||'gemini') && m.available))?'所选图像模型尚未配置，仍可使用原片。':'勾选同意后生成'+photoStyleNames[style]+'风格图；当前相纸仍使用'+photoStyleNames[activePhotoStyle]+'。');
+  if (applyPhotoStyle(style)) imageStatus(style==='original'?'已切回原片，不上传照片。':(isTravel?'正在使用已生成的旅拍图，可随时切回原片。':'正在使用已生成的'+photoStyleNames[style]+'风格图，可随时切回原片。'));
+  else imageStatus(!originalPhoto?'请先选择照片。':(isTravel?!travelModels.some(m=>m.id===$('travel-engine').value && m.available):!travelModels.some(m=>m.id===($('style-engine')?.value||'gemini') && m.available))?'所选图像模型尚未配置，仍可使用原片。':(isTravel?'勾选同意后生成实景旅拍图；当前相纸仍使用'+photoStyleNames[activePhotoStyle]+'。':'勾选同意后生成'+photoStyleNames[style]+'风格图；当前相纸仍使用'+photoStyleNames[activePhotoStyle]+'。'));
   const cached=style==='travel'?travelVariants.has(travelVariantKey()):Boolean(photoVariants[styleVariantKey(style)] || photoVariants[style]);
   $('stylize').textContent=(cached?'重新生成':'生成')+photoStyleNames[style]+'图';
   buttons();
@@ -680,6 +685,8 @@ $('clear-photo-btn')?.addEventListener('click', () => {
   if (origRadio) origRadio.checked = true;
   $('stylize-options').hidden = true;
   $('travel-options').hidden = true;
+  if ($('travel-section')) $('travel-section').classList.remove('active');
+  if ($('travel-toggle-text')) $('travel-toggle-text').textContent = '开启实景旅拍';
   if ($('upload-preview')) $('upload-preview').hidden = true;
   if ($('upload-placeholder')) $('upload-placeholder').hidden = false;
   $('photo').src = '/posters/poster_official.png';
@@ -776,3 +783,13 @@ if (musicBtn && bgAudio) {
     if (bars) bars.classList.add('playing');
   });
 }
+
+// Explicit exit travel button
+$('exit-travel-btn')?.addEventListener('click', () => {
+  if (busy || imageBusy || exporting) return;
+  const origRadio = document.querySelector('input[name=photo-style][value=original]');
+  if (origRadio) {
+    origRadio.checked = true;
+    origRadio.dispatchEvent(new Event('change'));
+  }
+});
